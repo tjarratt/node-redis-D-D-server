@@ -1,9 +1,8 @@
-var sys = require('sys');
 var url = require('url');
 var client = require("redis-client").createClient();
-var errorHandler = requie('err');
+var errorHandler = require('err');
 
-exports.handle = function(request, root) {
+exports.handle = function(request, root, response) {
 	switch (root) {
 		case "acct" :
 			var query = url.parse(request.url, true).query;
@@ -15,10 +14,10 @@ exports.handle = function(request, root) {
 				var message = "Error: username and or password expected for account creation.\n" +
 								"Your request should be in this form:\n" +
 								"POST http://server.com:8000/create/acct/name=FOO&pass=BAR";
-				errorHandler.err(409, message);
+				errorHandler.err(409, message, response);
 			}
 			client.hexists("accounts", user, function(err, result) {
-				if (err) errorHandler.err(409, "Username already exists. Please choose another name.");
+				if (err) errorHandler.err(409, "Username already exists. Please choose another name.", response);
 				if (result == false) {
 					client.hset("accounts", user, pass, function(err, result) {
 						if (err) errorHandler.respondDefault();

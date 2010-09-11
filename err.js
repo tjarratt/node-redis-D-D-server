@@ -1,4 +1,4 @@
-exports.err = function(code, message) {
+exports.err = function(code, message, res) {
 	res.writeHead(code, {'Content-Type': 'text/plain'});
 	res.end(message + '\n');
 }
