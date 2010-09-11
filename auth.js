@@ -33,8 +33,14 @@ exports.login = function(request, response) {
 					return false;
 				}
 				var uuid = Math.uuid();
-				response.writeHead(200, {'Content-Type': 'text/plain'});
-				response.end(uuid);
+				
+				//I would RATHER use memcached for this, so we can expire the keys, but this works for now
+				client.hset("login", uuid, user, function (e, result) {
+					if (e) {errorHandler.err(500, "Internal Error while authenticating."); return false;}
+					
+					response.writeHead(200, {'Content-Type': 'text/plain'});
+					response.end(uuid);
+				});
 			});
 		}
 	});
