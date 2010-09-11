@@ -9,14 +9,15 @@ var handler = function(req, res) {
 	var action = req.method;
 	var reqUrl = url.parse(req.url);
 	var paths = reqUrl.pathname;
-	sys.puts(sys.inspect(reqUrl));
 
 	//now we should break down the url into its components
 	paths = paths.split('/');
-	var base = paths[0];
+	paths.splice(0,1);
+	var base = paths.length > 0? paths[0] : null;
 	var nextURI = paths.length > 1 ? paths[1] : null;
 	
 	if (action == "GET" && (!base || base == "/")) {
+		//sys.puts("action: " + action + "\nbase: " + base + "\npaths: " + paths);
 		res.writeHead(200, {'Content-Type': 'text/plain'});
 		res.end("Hello World");
 	}
@@ -30,6 +31,7 @@ var handler = function(req, res) {
 				return;
 			}
 			
+			//sys.puts("going to create with URI: " + nextURI);
 			var creator = require('create');
 			creator.handle(req, nextURI, res);
 			break;
