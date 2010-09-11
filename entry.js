@@ -17,6 +17,8 @@ var handler = function(req, res) {
 	
 	switch (base) {
 		case "create" :
+			if (action != "POST" && action != "PUT") errorHandler.err(409, "Creating something cannot use " + action + " method.");
+		
 		    if (!nextURI || nextURI == null) {
 				errorHandler.err(403, "Shouldn't you specify what you want to create? Try /create/_TYPE_");
 				return;
