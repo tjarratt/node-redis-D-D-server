@@ -22,8 +22,11 @@ exports.handle = function(request, root, response) {
 				
 				return false;
 			}
-			client.hexists("accounts", user, function(err, result) {
-				if (err) errorHandler.err(409, "Username already exists. Please choose another name.", response);
+			client.hexists("accounts", user, function(err, result) {			
+				if (err) {
+					errorHandler.err(500, "Whoa something bad happened when trying to create your account. Sorry bro.", response);
+					return false;
+				}
 				if (result == false) {
 					client.hset("accounts", user, pass, function(err, result) {
 						if (err) {errorHandler.respondDefault(); return false;}
@@ -33,6 +36,10 @@ exports.handle = function(request, root, response) {
 						
 						return true;
 					});
+				}
+				else {
+					errorHandler.err(409, "Username already exists. Please choose another name.", response);
+					return;
 				}
 			});			
 			
