@@ -6,8 +6,8 @@ exports.err = function(code, message, res) {
 exports.defaultCode = 500;
 exports.defaultError = "An unknown error occurred. Whoops.";
 
-exports.respondDefault = function() {
-	exports.err(exports.defaultCode, exports.defaultError);
+exports.respondDefault = function(response) {
+	exports.err(exports.defaultCode, exports.defaultError, response);
 }                                     
 
 //assume these are strings for now

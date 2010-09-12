@@ -3,7 +3,6 @@ var url = require('url');
 var queryStr = require('querystring');
 var client = require("redis-client").createClient();
 var errorHandler = require('err');
-var sessions = require('models/session');
 
 exports.handle = function(request, root, response) {
 	var parsed = url.parse(request.url, true);
@@ -30,7 +29,7 @@ exports.handle = function(request, root, response) {
 				}
 				if (result == false) {
 					client.hset("accounts", user, pass, function(err, result) {
-						if (err) {errorHandler.respondDefault(); return false;}
+						if (err) {errorHandler.respondDefault(response); return false;}
 						
 						response.writeHead(200, {'Content-Type': 'text/plain'});
 						response.end("Account created successfully." + '\n');
@@ -47,20 +46,24 @@ exports.handle = function(request, root, response) {
 			break;
 		case "map" : 
 			break;
-		case "session":
+		case "session":   
+			var sessions = require('models/session');   
+			
 			var token = query.token;
 			var user = query.user;
 			
-			client.hget("login", uuid, function(e, result) {
-				if (errorHandler.isEmpty([token, user])) {
-					errorHandler.err(409, "Error in creating session: Username or token missing from request.");
-					return false;
-				}
+			if (errorHandler.isEmpty([token, user])) {
+				errorHandler.err(409, "Error in creating session: Username or token missing from request.", response);
+				return false;
+			}
+			
+			client.hget("login", token, function(e, result) {
+				if (e) {errorHandler.respondDefault(response); return false;}
 				
 				var actualUser = result;    
 				if (user != actualUser) {
-					errorHandler.err(403, "You are not who you say you are. Session TERMINATED.");
-					client.hdel("login", uuid, function(){return false;});
+					errorHandler.err(403, "You are not who you say you are. Session TERMINATED.", response);
+					client.hdel("login", token, function(){return false;});
 					return false;
 				}
 				
@@ -68,7 +71,7 @@ exports.handle = function(request, root, response) {
 				var maxUsers = query.users;
 				var key = query.sharedKey;
 				if (errorHandler.isEmpty([name, maxUsers, key])) {
-					errorHandler.err(409, "Error in creating session. Expected name, max # of user and key.\n");
+					errorHandler.err(409, "Error in creating session. Expected name, max # of users and shared secret.\n", response);
 				}
 				                        
 				var sessionID = Math.uuid();
@@ -86,6 +89,36 @@ exports.handle = function(request, root, response) {
 		case "unit":
 			break;
 		case "pc" :
+			var player = require("models/player");
+			var token = query.token;
+			var user = query.user;
+			
+			client.hget("login", token, function(e, result) {
+				if (e) {errorHandler.respondDefault(response); return false;}
+				
+				var realUser = result;
+				if (user != realUser) {
+					sys.puts("user: " + user + "\nrealUser: " + realUser);
+					errorHandler.err(403, "Auth failure.", response);
+					client.hdel("login", token, function() {return false;});
+					return false;
+				}
+				
+				var name = query.playerName;
+				var race = query.playerRace;
+				var playerClass = query.playerClass;
+				
+				var playerInfo = player.create(user, name, race, playerClass);
+				                       
+				var pcID = Math.uuid();
+				client.hset("players", pcID, playerInfo, function(e, result) {
+				   	if (e) {errorHandler.respondDefault(response); return false;}
+				
+					response.writeHead(200, {'Content-Type': 'text/plain', 'id' : pcID});
+					response.end("Character created successfully.");
+				});
+			});
+			
 			break;
 	}
 }
