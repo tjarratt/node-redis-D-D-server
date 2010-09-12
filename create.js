@@ -3,6 +3,7 @@ var url = require('url');
 var queryStr = require('querystring');
 var client = require("redis-client").createClient();
 var errorHandler = require('err');
+var sessions = require('models/session');
 
 exports.handle = function(request, root, response) {
 	var parsed = url.parse(request.url, true);
@@ -14,7 +15,7 @@ exports.handle = function(request, root, response) {
 			//look for user and pass in the request
 			var user = query? query.name : null;
 			var pass = query? query.pass : null;
-			if (!user || !pass || user.length < 1 || pass.length < 1) {
+			if (errorHandler.isEmpty([user, pass])) {
 				var message = "Error: username and or password expected for account creation.\n" +
 								"Your request should be in this form:\n" +
 								"POST http://server.com:8000/create/acct/name=FOO&pass=BAR";
@@ -51,8 +52,8 @@ exports.handle = function(request, root, response) {
 			var user = query.user;
 			
 			client.hget("login", uuid, function(e, result) {
-				if (!token || !user) {
-					errorHandler.err(409, "Username or token missing from request. In create session.");
+				if (errorHandler.isEmpty([token, user])) {
+					errorHandler.err(409, "Error in creating session: Username or token missing from request.");
 					return false;
 				}
 				
@@ -66,7 +67,19 @@ exports.handle = function(request, root, response) {
 				var name = query.sessionName;
 				var maxUsers = query.users;
 				var key = query.sharedKey;
-				//TODO: create session with the information submitted
+				if (errorHandler.isEmpty([name, maxUsers, key])) {
+					errorHandler.err(409, "Error in creating session. Expected name, max # of user and key.\n");
+				}
+				                        
+				var sessionID = Math.uuid();
+				var sessionData = sessions.create(user, name, maxUsers, key);
+				
+				client.hset("sessions", sessionID, sessionData, function(e, result) {
+					if (e) {errorHandle.respondDefault(); return false;}
+
+					response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
+					response.end("Created session successfully.");
+				});
 				
 			});
 			break;
