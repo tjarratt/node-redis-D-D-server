@@ -2,11 +2,13 @@ var sys = require('sys');
 var url = require('url');
 var queryStr = require('querystring');
 var client = require("redis-client").createClient();
-var errorHandler = require('err');
+var errors = require('err');
 
 exports.handle = function(request, root, response) {
 	var parsed = url.parse(request.url, true);
 	var query = parsed.query;
+	
+	var errorHandler = errors.newHandler(response);
 	
 	switch (root) {
 		case "acct" :               
@@ -29,7 +31,7 @@ exports.handle = function(request, root, response) {
 				}
 				if (result == false) {
 					client.hset("accounts", user, pass, function(err, result) {
-						if (err) {errorHandler.respondDefault(response); return false;}
+						if (err) {errorHandler.err()); return false;}
 						
 						response.writeHead(200, {'Content-Type': 'text/plain'});
 						response.end("Account created successfully." + '\n');
@@ -58,7 +60,7 @@ exports.handle = function(request, root, response) {
 			}
 			
 			client.hget("login", token, function(e, result) {
-				if (e) {errorHandler.respondDefault(response); return false;}
+				if (e) {errorHandler.err(); return false;}
 				
 				var actualUser = result;    
 				if (user != actualUser) {
@@ -78,7 +80,7 @@ exports.handle = function(request, root, response) {
 				var sessionData = sessions.create(user, name, maxUsers, key);
 				
 				client.hset("sessions", sessionID, sessionData, function(e, result) {
-					if (e) {errorHandle.respondDefault(); return false;}
+					if (e) {errorHandle.err(); return false;}
 
 					response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
 					response.end("Created session successfully.");
@@ -94,7 +96,7 @@ exports.handle = function(request, root, response) {
 			var user = query.user;
 			
 			client.hget("login", token, function(e, result) {
-				if (e) {errorHandler.respondDefault(response); return false;}
+				if (e) {errorHandler.err(); return false;}
 				
 				var realUser = result;
 				if (user != realUser) {
@@ -112,7 +114,7 @@ exports.handle = function(request, root, response) {
 				                       
 				var pcID = Math.uuid();
 				client.hset("players", pcID, playerInfo, function(e, result) {
-				   	if (e) {errorHandler.respondDefault(response); return false;}
+				   	if (e) {errorHandler.err(); return false;}
 				
 					response.writeHead(200, {'Content-Type': 'text/plain', 'id' : pcID});
 					response.end("Character created successfully.");
