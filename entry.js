@@ -50,6 +50,9 @@ var handler = function(req, res) {
 			var creator = require('create');
 			creator.handle(req, nextURI, res);
 			break;
+		case "modify" :
+			//use case: modify a user, or session
+			break;
 		default :
 			errorHandler.err(501, 'This is not a valid endpoint.', res);
 			break;

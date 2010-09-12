@@ -5,11 +5,11 @@ var client = require("redis-client").createClient();
 var errorHandler = require('err');
 
 exports.handle = function(request, root, response) {
+	var parsed = url.parse(request.url, true);
+	var query = parsed.query;
+	
 	switch (root) {
-		case "acct" :
-			var parsed = url.parse(request.url, true);
-			var query = parsed.query;
-			                                   
+		case "acct" :               
 			//sys.puts("request: " + sys.inspect(request));
 			//look for user and pass in the request
 			var user = query? query.name : null;
@@ -44,9 +44,31 @@ exports.handle = function(request, root, response) {
 			});			
 			
 			break;
-		case "map" :
+		case "map" : 
 			break;
 		case "session":
+			var token = query.token;
+			var user = query.user;
+			
+			client.hget("login", uuid, function(e, result) {
+				if (!token || !user) {
+					errorHandler.err(409, "Username or token missing from request. In create session.");
+					return false;
+				}
+				
+				var actualUser = result;    
+				if (user != actualUser) {
+					errorHandler.err(403, "You are not who you say you are. Session TERMINATED.");
+					client.hdel("login", uuid, function(){return false;});
+					return false;
+				}
+				
+				var name = query.sessionName;
+				var maxUsers = query.users;
+				var key = query.sharedKey;
+				//TODO: create session with the information submitted
+				
+			});
 			break;
 		case "unit":
 			break;
