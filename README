@@ -1,5 +1,32 @@
 A RESTFUL server for creating, managing, running and joining tabletop game sessions. This will be updated as the API is built out.
 
+This server provides a REST interface for creating table top game sessions that include the following
+a Game Master
+users
+player characters (possibly more/less than users)
+maps
+player locations on maps
+non-player units on the map
+
+examples:
+
+Create an account
+PUT http://server.com/8000/create/acct/user=JoeTheRogue&password=FooBar
+response: token=_UUID_
+
+Creating a new map
+PUT http://server.com:8000/create/map?user=JoeTheRogue&token=UUID&filename=@/thisMap.jog
+response: id=_UUID_
+
+There is a lot of functionality not built out yet including:
+sessions that players can join
+tagging, collecting maps
+real time messaging between players in a session
+adding player locations on the map
+adding units
+modifying anything
+support for keeping track of player initiative / restricting movement on the board
+
 If you are interested in creating a client for
 iOS
 android
