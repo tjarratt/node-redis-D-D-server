@@ -1,8 +1,8 @@
-exports.create = function(owner, name, race, _class) {
+exports.create = function(owner, name, max, key) {
 	return {
 		'owner' : owner,
 		'name' : name,
-		'race' : race,
-		'class' : _class
+		'maxUsers' : max,
+		'key' : key
 	}
 }
