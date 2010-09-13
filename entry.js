@@ -30,10 +30,14 @@ var handler = function(req, res) {
 			
 			break;
 		case "start" :
-			var starter = require('start');
+			//var starter = require('start');
+			response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
+			response.end(root + " method is not implemented yet.");
 			break;
 		case "join" :
-			var joiner = require('join');
+			//var joiner = require('join');
+			response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
+			response.end(root + " method is not implemented yet.");
 			break;
 		case "create" :
 			if (action != "POST" && action != "PUT") {
@@ -52,9 +56,11 @@ var handler = function(req, res) {
 			break;
 		case "modify" :
 			//use case: modify a user, or session
+			response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
+			response.end(root + " method is not implemented yet.");
 			break;
 		default :
-			errorHandler.err(501, 'This is not a valid endpoint.', res);
+			errorHandler.err(501, base + ' is not a valid endpoint.', res);
 			break;
 	}
 	

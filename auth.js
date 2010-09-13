@@ -44,4 +44,13 @@ exports.login = function(request, response) {
 			});
 		}
 	});
+}      
+
+exports.createAuthenticator = function(response) {
+	var auth = new authenticator();
+	return auth;
+}
+
+function authenticator(res) {
+	this.response = res;
 }

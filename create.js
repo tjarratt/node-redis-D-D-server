@@ -4,6 +4,34 @@ var queryStr = require('querystring');
 var client = require("redis-client").createClient();
 var errors = require('err');
 
+/*
+ * Create multipart parser to parse given request
+ */
+function parse_multipart(req) {
+	var multipart = require('lib/multipart');
+    var parser = multipart.parser();
+
+    // Make parser use parsed request headers
+    parser.headers = req.headers;
+
+    // Add listeners to request, transfering data to parser
+
+    req.addListener("data", function(chunk) {
+        parser.write(chunk);
+    });
+
+    req.addListener("end", function() {
+        parser.close();
+    });
+
+    return parser;
+}
+
+function upload_complete(res, id) {
+	res.writeHead(200, {'Content-Type': 'text/plain', 'id': id});
+	res.end("Saved file with id " + id);
+}
+
 exports.handle = function(request, root, response) {
 	var parsed = url.parse(request.url, true);
 	var query = parsed.query;
@@ -16,7 +44,7 @@ exports.handle = function(request, root, response) {
 			//look for user and pass in the request
 			var user = query? query.name : null;
 			var pass = query? query.pass : null;
-			if (errorHandler.isEmpty([user, pass])) {
+			if (errors.isEmpty([user, pass])) {
 				var message = "Error: username and or password expected for account creation.\n" +
 								"Your request should be in this form:\n" +
 								"POST http://server.com:8000/create/acct/name=FOO&pass=BAR";
@@ -31,7 +59,7 @@ exports.handle = function(request, root, response) {
 				}
 				if (result == false) {
 					client.hset("accounts", user, pass, function(err, result) {
-						if (err) {errorHandler.err()); return false;}
+						if (err) {errorHandler.err(); return false;}
 						
 						response.writeHead(200, {'Content-Type': 'text/plain'});
 						response.end("Account created successfully." + '\n');
@@ -46,7 +74,77 @@ exports.handle = function(request, root, response) {
 			});			
 			
 			break;
-		case "map" : 
+		case "map" :
+		 	var maps = require('models/maps');
+			var multipart = require('lib/multipart');
+			var fs = require('fs');
+			
+			var token = query.token;
+			var user = query.user;
+			var name = query.filename;
+			
+			if (errors.isEmpty([token, user, name])) {
+				errorHandler.err(409, "Username or token missing from request.");
+				return false;
+			}
+			
+			request.setEncoding('binary');
+			
+			// Handle request as multipart
+			var stream = parse_multipart(request);
+			
+			var fileName = null;
+		    var fileStream = null;
+
+		    // Set handler for a request part received
+		    stream.onPartBegin = function(part) {
+		        // Construct file name
+		        fileName = "/nodeUploads/" + stream.part.filename;
+
+		        // Construct stream used to write to file
+		        fileStream = fs.createWriteStream(fileName);
+
+		        // Add error handler
+		        fileStream.addListener("error", function(err) {
+		            sys.debug("Got error while writing to file '" + fileName + "': ", err);
+		        });
+
+		        // Add drain (all queued data written) handler to resume receiving request data
+		        fileStream.addListener("drain", function() {
+		            request.resume();
+		        });
+		    };
+
+		    // Set handler for a request part body chunk received
+		    stream.onData = function(chunk) {
+		        // Pause receiving request data (until current chunk is written)
+		        request.pause();
+
+		        // Write chunk to file
+		        // Note that it is important to write in binary mode
+		        // Otherwise UTF-8 characters are interpreted
+		        fileStream.write(chunk, "binary");
+		    };
+
+		    // Set handler for request completed
+		    stream.onEnd = function() {
+		        // As this is after request completed, all writes should have been queued by now
+		        // So following callback will be executed after all the data is written out
+		        fileStream.addListener("drain", function() {
+		            // Close file stream
+		            fileStream.end();
+		
+					var id = Math.uuid();
+					var mapData = maps.create(user, fileName, id);
+					//sys.puts("id: " + id + "\ndata: " + sys.inspect(mapData));
+					
+					client.rpush(user + "/maps", mapData, function(e, result) {return false;});
+		            // Handle request completion, as all chunks were already written
+		            upload_complete(response, id);
+		        });
+		    };  
+			/*response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
+			response.end(root + " method is not implemented yet.");*/
 			break;
 		case "session":   
 			var sessions = require('models/session');   
@@ -54,7 +152,7 @@ exports.handle = function(request, root, response) {
 			var token = query.token;
 			var user = query.user;
 			
-			if (errorHandler.isEmpty([token, user])) {
+			if (errors.isEmpty([token, user])) {
 				errorHandler.err(409, "Error in creating session: Username or token missing from request.", response);
 				return false;
 			}
@@ -72,7 +170,7 @@ exports.handle = function(request, root, response) {
 				var name = query.sessionName;
 				var maxUsers = query.users;
 				var key = query.sharedKey;
-				if (errorHandler.isEmpty([name, maxUsers, key])) {
+				if (errors.isEmpty([name, maxUsers, key])) {
 					errorHandler.err(409, "Error in creating session. Expected name, max # of users and shared secret.\n", response);
 				}
 				                        
@@ -89,6 +187,8 @@ exports.handle = function(request, root, response) {
 			});
 			break;
 		case "unit":
+			response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
+			response.end(root + " method is not implemented yet.");
 			break;
 		case "pc" :
 			var player = require("models/player");

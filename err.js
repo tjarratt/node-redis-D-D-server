@@ -1,3 +1,5 @@
+require("lib/underscore-min")
+
 exports.err = function(code, message, res) {
 	res.writeHead(code, {'Content-Type': 'text/plain'});
 	res.end(message + '\n');
@@ -13,10 +15,10 @@ exports.respondDefault = function(response) {
 //assume these are strings for now
 exports.isEmpty = function(fields) {
 	var result = false;
-	$.each(fields, function(obj) {
-		if (!field || field.length < 1) {
+	_.each(fields, function(value, key, list) {
+		if (!value || value.length < 1) {
 			result = true;
-			return false;
+			_.breakLoop();
 		}
 	});
 	return result;
@@ -26,6 +28,10 @@ exports.isEmpty = function(fields) {
  * basic error handler object
  * provides same functionality as this module
 */ 
+
+function errorHandler(responseObj) {
+	this.response = responseObj;
+}
 
 exports.newHandler = function(response, code, message) {
 	var handler = new errorHandler(response);
@@ -44,7 +50,7 @@ errorHandler.prototype.err = function(code, message) {
 	var responseMsg = message ? message : this.message;
 	
 	this.response.writeHead(code, {'Content-Type': 'text/plain'});
-	this.response.end(message "\n");
+	this.response.end(message + "\n");
 	
 	return;	
 }
