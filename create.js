@@ -147,7 +147,7 @@ exports.handle = function(request, root, response) {
 			response.end(root + " method is not implemented yet.");*/
 			break;
 		case "session":   
-			var sessions = require('models/session');   
+			var sessions = require('models/session');
 			
 			var token = query.token;
 			var user = query.user;
@@ -178,7 +178,7 @@ exports.handle = function(request, root, response) {
 				var sessionData = sessions.create(user, name, maxUsers, key);
 				
 				client.hset("sessions", sessionID, sessionData, function(e, result) {
-					if (e) {errorHandle.err(); return false;}
+					if (e) {errorHandler.err(); return false;}
 
 					response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
 					response.end("Created session successfully.");

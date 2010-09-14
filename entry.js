@@ -21,8 +21,20 @@ var handler = function(req, res) {
 		res.writeHead(200, {'Content-Type': 'text/plain'});
 		res.end("Hello World.");
 	}
-	
+	        
+	//TODO it would be nicer to have an object that you could call obj[base](args)
+	//but we would need to have some default behavior
+	//and we wouldn't want to expose anything normal users wouldn't have access to
+	/*
+	maybe something like (if(typeof(obj[base]) != "function") {obj[base] = function(ERROR)})
+	*/
 	switch (base) {
+		case "message" : 
+		
+			res.writeHead(500, {'Content-Type': 'text/plain'});
+			res.end("Not implemented yet.");
+			
+			break;
 		case "auth" :
 			if (action != "POST" && action != "PUT") {errorHandler.err(409, "Auth must be POST or PUT. Request was via " + method, res); return false;}
 			var auth = require('auth');
@@ -30,14 +42,15 @@ var handler = function(req, res) {
 			
 			break;
 		case "start" :
-			//var starter = require('start');
-			response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
-			response.end(root + " method is not implemented yet.");
+			var starter = require('starter');
+			
+			starter.initSession(nextURI, res);
 			break;
 		case "join" :
-			//var joiner = require('join');
-			response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
-			response.end(root + " method is not implemented yet.");
+			var joiner = require('joiner');
+			
+			joiner.joinSession(nextURI, res, nextURI);
+			
 			break;
 		case "create" :
 			if (action != "POST" && action != "PUT") {

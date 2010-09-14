@@ -1,6 +1,7 @@
 require("lib/underscore-min")
 
 exports.err = function(code, message, res) {
+	//if(!res instance of Client.Response) {something something;}
 	res.writeHead(code, {'Content-Type': 'text/plain'});
 	res.end(message + '\n');
 }
