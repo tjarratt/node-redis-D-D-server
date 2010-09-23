@@ -3,83 +3,54 @@ var http = require('http');
 var url = require('url');
 var errorHandler = require("err");
 require('uuid');
+var gh = require('grasshopper');
 
-var handler = function(req, res) {
-	//sys.puts(sys.inspect(req));
-	                  
-	var action = req.method;
-	var reqUrl = url.parse(req.url);
-	var paths = reqUrl.pathname;
-
-	//now we should break down the url into its components
-	paths = paths.split('/');
-	paths.splice(0,1);
-	var base = paths.length > 0? paths[0] : null;
-	var nextURI = paths.length > 1 ? paths[1] : null;
+gh.gets("/message/{channel}", function(args) {
+	//not implemented yet
+	this.renderText("Not implemented yet.");
 	
-	if (action == "GET" && (!base || base == "/")) {
-		res.writeHead(200, {'Content-Type': 'text/plain'});
-		res.end("Hello World.");
-	}
-	        
-	//TODO it would be nicer to have an object that you could call obj[base](args)
-	//but we would need to have some default behavior
-	//and we wouldn't want to expose anything normal users wouldn't have access to
-	/*
-	maybe something like (if(typeof(obj[base]) != "function") {obj[base] = function(ERROR)})
-	*/
-	switch (base) {
-		case "message" : 
-		
-			res.writeHead(500, {'Content-Type': 'text/plain'});
-			res.end("Not implemented yet.");
-			
-			break;
-		case "auth" :
-			if (action != "POST" && action != "PUT") {errorHandler.err(409, "Auth must be POST or PUT. Request was via " + method, res); return false;}
-			var auth = require('auth');
-			auth.login(req, res);
-			
-			break;
-		case "start" :
-			var starter = require('starter');
-			
-			starter.initSession(nextURI, res);
-			break;
-		case "join" :
-			var joiner = require('joiner');
-			
-			joiner.joinSession(nextURI, res, nextURI);
-			
-			break;
-		case "create" :
-			if (action != "POST" && action != "PUT") {
-				errorHandler.err(409, "Creating something cannot use " + action + " method.", res);
-				return false;
-			}
-
-		    if (!nextURI || nextURI == null) {
-				errorHandler.err(403, "Shouldn't you specify what you want to create? Try /create/_TYPE_", res);
-				return;
-			}
-
-			//sys.puts("going to create with URI: " + nextURI);
-			var creator = require('create');
-			creator.handle(req, nextURI, res);
-			break;
-		case "modify" :
-			//use case: modify a user, or session
-			response.writeHead(200, {'Content-Type': 'text/plain', 'id' : sessionID});
-			response.end(root + " method is not implemented yet.");
-			break;
-		default :
-			errorHandler.err(501, base + ' is not a valid endpoint.', res);
-			break;
-	}
+	this.model['channel'] = args.channel;
+	var messageCtl = require('messager');
+	messageCtl.model = this.model;
 	
+	messageCtl.handle(args);
+});
+
+gh.gets("/auth", function(args) {
+	var auth = require('auth');
+	this.render("views/auth");
+});
+gh.post("/auth", function(args) {
+	var auth = require("auth");
+	auth.login(args);
+})
+
+gh.gets("/start", function(args) {
+	var starter = require("starter");
+	this.renderText("What do you want to start? (no web interface, try POSTing).");
+})
+gh.post("/start/{type}", function(args) {
+	var starter = require('starter');
+	starter.initSession(args.type, args);
+});
+       
+gh.gets("/join", function(args) {
+	var joiner = require("joiner");
+	this.renderText("What do you want to join? (no web interface, try POSTing)");
+})
+gh.post("/join/{session}", function(args) {
+	var joiner = require("joiner");
+	joiner.joinSession(args.session)
+})
+                               
+gh.gets("/create", function(args) {
+	var creator = require("create");
+	this.renderText("What do you want to create?");
+})
+gh.post("/create/{type}", function(args) {
+	var creator = require("create");
+	creator.handle(args.type, args);
 }
 
-var server = http.createServer();
-server.addListener("request", handler);
-server.listen(8000);
-sys.puts("Server running on port 8000");
+gh.serve(8080);
+sys.puts("Server running on port 8080");
