@@ -3,6 +3,7 @@ var url = require('url');
 var queryStr = require('querystring');
 var client = require("redis-client").createClient();
 var errors = require('err');
+var errorHandler = errors.newHandler();
 
 /*
  * Create multipart parser to parse given request
@@ -31,17 +32,51 @@ function upload_complete(res, id) {
 	res.writeHead(200, {'Content-Type': 'text/plain', 'id': id});
 	res.end("Saved file with id " + id);
 }
+                                   
+//possible responses emitted by this object
+exports.responses = {
+  //I'd really like for this to be 
+  'methodNotDefinedError' : [500, 'Method not defined. What are you trying to create?'],
+  
+  'accountSuccess' : [200, "Account created successfully."],
+  'accountInputFailure' : [409, "username and password are necessary for account creation.\n"],
+  'accountError' : [500, "whoa something ba happened when trying to creat your account. Sorry bro."],
+  'accountExistsError' : [409, "Username already exists. Please choose another name."],
+}
 
-exports.handle = function(request, root, response) {
-	var parsed = url.parse(request.url, true);
-	var query = parsed.query;
-	
-	var errorHandler = errors.newHandler(response);
-	
+exports.methods = ['acct'];
+
+exports.acct = function(username, password) {
+  if (errors.isEmpty([username, password])) {
+    return exports.responses['accountInputFailure'];
+  }
+  
+  client.hexists("accounts", user, function(err, result) {			
+		if (err) {
+      return exports.responses['accountError'];
+		}
+		if (result == false) {
+			client.hset("accounts", user, pass, function(err, result) {
+				if (err) return exports.responses['accountError'];
+				
+				return exports.responses['accountSuccess'];
+			});
+		}
+		else {
+			return exports.responses['accountExistsError'];
+		}
+	});
+}
+
+exports.handle = function(type, args) {
+  if (!_.include(exports.methods, type || !typeof(exports[type]) != "function") {
+    return exports.responses['methodNotDefinedError'];
+  }
+  
+  return exports[type](args);
+  	
 	switch (root) {
 		case "acct" :               
-			//sys.puts("request: " + sys.inspect(request));
-			//look for user and pass in the request
 			var user = query? query.name : null;
 			var pass = query? query.pass : null;
 			if (errors.isEmpty([user, pass])) {
