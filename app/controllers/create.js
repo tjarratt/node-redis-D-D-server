@@ -1,9 +1,18 @@
 var sys = require('sys');
-var url = require('url');
-var queryStr = require('querystring');
+
 var client = require("redis-client").createClient();
 var errors = require('err');
 var errorHandler = errors.newHandler();
+
+var gh = require('grasshopper');
+
+gh.get("/account", function() {
+  this.renderText("Your account information will be here.");
+});
+
+gh.post("/account/{name}", function(args) {
+  this.renderText("Updated your account successfully");
+});
 
 /*
  * Create multipart parser to parse given request
@@ -42,10 +51,6 @@ exports.responses = {
   'accountError' : [500, "whoa something ba happened when trying to creat your account. Sorry bro."],
   'accountExistsError' : [409, "Username already exists. Please choose another name."],
 }
-
-exports.methods = ['acct'];
-
-exports.responder = false;
 
 exports.acct = function(responder, username, password) {
   if (errors.isEmpty([username, password])) {

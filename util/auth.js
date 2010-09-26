@@ -1,6 +1,5 @@
 var sys = require('sys');
-var url = require('url');
-var queryStr = require('querystring');
+
 var client = require("redis-client").createClient();
 var errorHandler = require('err');    
 
