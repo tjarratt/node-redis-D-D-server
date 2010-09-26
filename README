@@ -11,11 +11,13 @@ non-player units on the map
 examples:
 
 Create an account
-PUT http://server.com/8000/create/acct/user=JoeTheRogue&password=FooBar
-response: token=_UUID_
+PUT http://server.com/8000/account/user=JoeTheRogue&pass=FooBar
+response: 
+	header: 200, Account Creation Successful
+	body: true
 
 Creating a new map
-PUT http://server.com:8000/create/map?user=JoeTheRogue&token=UUID&filename=@/thisMap.jog
+PUT http://server.com:8000/map/__MAP-UUID__?user=JoeTheRogue&token=UUID&filename=@/thisMap.jog
 response: id=_UUID_
 
 There is a lot of functionality not built out yet including:
