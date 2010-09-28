@@ -45,7 +45,6 @@ exports.createAccount = function(username, password, callback) {
 }
 
 gh.get("/account", function() {  
-  this.model['name'] = "test";
   this.render('account');
 });
 

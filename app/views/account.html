@@ -1,45 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-    <head>
-        <title>Tabletop Server</title>
-		<!--TODO: set the title here as a variable the view will set (SEO-ish) -->
-		<!-- TODO: javascript, css-->
-    </head>
-    <body>
-        <a href="/">Home</a>
-        |
-        <a href="/account">Account</a>
-        |
-        <a href="/session">Start / Join a Session</a>
-        |
-        <a href="/map">Maps</a>
-        |
-		<a href="/pc">Characters</a>       
-        <div id="container">
-	    	Have an account? Login below or Register now.
-			<div class="clear"></div>
-			<div id="loginContainer">
-				<form action="http://localhost:8080/account">
-					Username:
-					<input id="user" name='user' type="text"/>
-					<div class="clear"></div>
-					Password:
-					<input id="pass" name="pass" type="password"/>
-				</form>
-			</div>
-			<div class="clear"></div>
-			<div id="regContainer">
-				<form action="http://localhost:8080/register">
-					Name:
-					<input id="user" name='user' type="text"/>
-					<div class="clear"></div>
-					Password:
-					<input id="pass" name="pass" type="password"/>
-					<div class="clear"></div>
-					Confirm  Password:
-					<input id="pass" name="pass" type="password"/>
-				</form>
-			</div>
-		</div>
-    </body>
-</html>
+Have an account? Login below or Register now.
+<div class="clear"></div>
+<div id="loginContainer">
+	Name:
+	<input id="user" name='user' type="text">
+	<div class="clear"></div>
+	Password:
+	<input id="pass" name="pass" type="password">
+	<div class="clear"></div>
+	Confirm  Password:
+	<input id="pass" name="pass" type="password">
+</div>
+<div class="clear"></div>
+<div id="regContainer">
+	Name:
+	<input id="user" name='user' type="text">
+	<div class="clear"></div>
+	Password:
+	<input id="pass" name="pass" type="password">
+	<div class="clear"></div>
+	Confirm  Password:
+	<input id="pass" name="pass" type="password">
+</div>
