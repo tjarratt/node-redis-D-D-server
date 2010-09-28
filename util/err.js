@@ -1,4 +1,4 @@
-require("lib/underscore-min")
+require("../lib/underscore-min")
 
 exports.err = function(code, message, res) {
 	//if(!res instance of Client.Response) {something something;}
