@@ -5,7 +5,7 @@ var gh = require('grasshopper');
 
 gh.configure({
     viewsDir: './app/views',
-    //layout: './app/views/layout',
+    layout: './app/views/layout',
     
     //TODO: figure out what this is
     //locales: require('./locales')
