@@ -25,7 +25,6 @@ function parse_multipart(req) {
     parser.headers = req.headers;
 
     // Add listeners to request, transfering data to parser
-
     req.addListener("data", function(chunk) {
         parser.write(chunk);
     });
