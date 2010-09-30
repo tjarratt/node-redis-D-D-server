@@ -11,7 +11,7 @@ gh.configure({
     //locales: require('./locales')
 });
 
-["account", "find", "map", "session"
+["account", "find", "map", "session", "talk"
 ].forEach(function(controller) {
     require("./app/controllers/" + controller);
 });
