@@ -8,17 +8,32 @@ maps
 player locations on maps
 non-player units on the map
 
+Getting Started:
+So you'd like to run this? You'll need 
+node.js (http://github.com/ry/node)
+npm (curl http://npmjs.org/install.sh | sudo sh)
+and some npm modules
+	npm install grasshopper
+	npm install redis
+	
+and if you want the Talk functionality, you'll want to be running os x (for now. In the future the server itself will not talk).
+
 examples:
 
 Create an account
-PUT http://server.com/8000/account/user=JoeTheRogue&pass=FooBar
+PUT http://server.com/8080/account/user=JoeTheRogue&pass=FooBar
 response: 
 	header: 200, Account Creation Successful
 	body: true
 
 Creating a new map
-PUT http://server.com:8000/map/__MAP-UUID__?user=JoeTheRogue&token=UUID&filename=@/thisMap.jog
+PUT http://server.com:8080/map/__MAP-UUID__?user=JoeTheRogue&token=UUID&filename=@/thisMap.jog
 response: id=_UUID_
+
+Make the server talk:
+POST http://server.com:8080/talk?message=helloWorld
+response: Hear anything yet?
+(server should execute the `say` command on os x)
 
 There is a lot of functionality not built out yet including:
 sessions that players can join

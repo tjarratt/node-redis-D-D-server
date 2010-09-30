@@ -34,5 +34,9 @@ gh.post("/talk", function(args) {
     self.renderText("Hear anything yet?");
   }
   
+  //TODO: execute `which say` to see if it's available first
+  //TODO: validate input better, it would not be fun to have someone find a way to run rm -Rf /* 
+  //      (even though node is never run as root)
+  
   exec("say -v cellos " + message, callback);
 });
