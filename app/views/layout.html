@@ -3,8 +3,10 @@
         <title>Tabletop Server</title>
 		<!--TODO: set the title here as a variable the view will set (SEO-ish) -->
 		<!-- TODO: javascript, css-->
+		<script src="http://cdn.socket.io/stable/socket.io.js"></script>
+		<link rel="stylesheet" type="text/css" href="/res/dnd.css" />
     </head>
-    <body>
+    <body vlink="blue">
         <a href="/">Home</a>
         |
         <a href="/account">Account</a>
@@ -15,7 +17,7 @@
         |
 		<a href="/pc">Characters</a> 
 		|
-		<a href="/talk">Talk</a>      
+		<a href="/talk">Talk</a>
 		<div id="container">
 	        <%= include(view) %>
 		</div>

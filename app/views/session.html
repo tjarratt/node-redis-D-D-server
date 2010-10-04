@@ -1,0 +1,28 @@
+<h2><%= display %></h2>
+
+<div class="clear"></div>
+<h3>Active Sessions</h3>
+<ul>
+    <% activeSessions.forEach(function(session) { %>
+        <li>
+            <div>
+                <a href="<%= session.href %>"><%= session.name %></a>
+            </div>
+        </li>
+    <% }); %>
+</ul>
+
+<div class="clear"></div>
+<h3>All Sessions</h3>
+<ul>
+    <% sessions.forEach(function(session) { %>
+        <li>
+            <div>
+                <a href="/session/start/<%= session.id %>"><%= session.name %></a>
+            </div>
+        </li>
+    <% }); %>
+</ul>
+<a href="/session/create">Create a new session</a>
+ or 
+<a href="/session/delete">Delete all sessions</a>

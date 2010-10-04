@@ -1,60 +1,48 @@
-var client = require('lib/redis-client').createClient();
 var sys = require('sys');
-var url = require('url');
-var errorHandler = require('err');
+var util = require('../../util/util');
+require("../../lib/uuid");
+var errors = require('../../util/err');
 
-exports.joinSession = function(id, response, name) {
-	if (errorHandler.isEmpty([id, name])) {
-		errorHandler.err();
-	}
-	
-	client.hget("activeSessions", id, function(e, users) {
-		if (e) {errorHandler.err(); return false;}
-		                                              
-		//should never happen, since active session are supposed to die when no one is left
-		if (typeof(users) != "array") {users = [name]}
-		else {
-			users.push(name);
-		}
-		
-		var receivedMessageCallback = function(key, message) {
-			response.write(message + "\n");
-			//response.end();
-		}
-		
-		client.subscribeTo("active" + id, receivedMessageCallback);
-		
-		response.writeHead(200, {'Content-Type': 'text/plain'});
-		response.write("Intialized session successfully.\n");
-	});
+var client = require('../../lib/redis-client').createClient();
+
+var errors = require('../../util/err');
+require("../../lib/underscore-min")
+
+var gh = require('grasshopper');
+
+responses = {
+  'idInactiveError' : "This session is not active right now.",
+  'joinSuccess' : "Roll some 20s, broseph. Sick, so sick.",
+  "noUserError" : "Client error: no user specified"
 }
-                                      
-//usage: for clients that don't want to leave a connection open, register an endpoint like
-//http://server.com:8000/messages/__UUID__
-exports.joinSessionAndRegisterEndPoint = function(id, response, name) {
-	if (errorHandler.isEmpty([id, name])) {errorHandler.err();}
-	
-	client.hget("activeSessions", id, function(e, users) {
-		if (e) {errorHandler.err(); return false;}
-		                                              
-		//should never happen, since active session are supposed to die when no one is left
-		if (typeof(users) != "array") {users = [name]}
-		else{
-			users.push(name);
-		}
-		
-		var key = "msgs:" + name + "/" + id;
-		var receivedMessageCallback = function(key, message) {
-			//push message onto queue so users can pick it up later
-			client.rpush(key, message, function() {return;});
-		}
-		
-		client.subscribeTo("active" + id, receivedMessageCallback);
-		
-		response.writeHead(200, {'Content-Type': 'text/plain'});
-		response.end("Intialized session successfully.");
-		
-		//initialize a queue object that we can put messages in
-		client.rpush(key, "Initialized", function(){return;});
-	});
-}
+
+gh.get("/join/{id}", function(args) {
+  var self = this;
+  var id = args.id;
+                                    
+  //actually, should be reading this from a cookie : too lazy to implement yet
+  if (!this.params) {
+    return this.renderText(responses['noUserError']);
+  }
+  
+  var thisUser = this.params['user'];
+  if (errors.isEmpty([thisUser, id])) {return self.renderText(responses['noUserError'])}
+  
+  //make sure this is an existing, active session
+  client.hexists("active", id, function(e, result) {
+    if (e || result != true) {return self.renderText(responses['idInactiveError'])}
+    
+    //add this user to the list of users in the room
+    client.rpush(id + "/users", thisUser, function(e, result) {
+      //send back a timestamp and id where the user can listen for messages / updates
+      var now = new Date();
+      var listenId = id + "/listen";
+      
+      self.model['display'] = responses['joinSuccess'];
+      self.model['startTime'] = now;
+      self.model['listenId'] = listenId;
+      
+      self.render("room");
+    });
+  });
+});

@@ -20,8 +20,12 @@ gh.post("/talk", function(args) {
   if (message.indexOf(";") >= 0) {
     message = message.substr(0, message.indexOf(";"));
   }
-  if (message.indexOf("&&") >= 0) {
+  if (message.indexOf("&") >= 0) {
     message = message.substr(0, message.indexOf("&&"));
+  }
+  
+  if (/^[A-Za-z0-9\s]*$/.test(message) != true) {
+    message = "wakka wakka you fool try harder next time";
   }
   
   if (message.length <= 1) {

@@ -1,22 +1,36 @@
 var sys = require('sys');
+var util = require('../../util/util');
+require("../../lib/uuid");
 
-var client = require("redis").createClient();
+var redis = require("../../lib/redis-client");
+var client = redis.createClient();
+
 var errors = require('../../util/err');
-var errorHandler = errors.newHandler();
+
+require("../../lib/underscore-min")
 
 var gh = require('grasshopper');
 
+//socket.io I choose you!
+//io = require('socket.io');
+//var socket = io.listen(gh.server);
+
 exports.responses = {
   'sessionStorageError' : [500, "An error occurred while processing your request."],
-  
-  'sessionInitOkay' : [301, "Your session has been started with id:"]
+  'sessionNotFound' : [403, 'No session was found'],
+  'sessionInitOkay' : [301, "Your session has been started with id:"],
+  'sessionCreated' : [200, "Your session has been successfully created."]
 }
 
 exports.initSession = function(id, callback) {
 	client.hget("sessions", id, function(e, result) {
 		if (e) {callback(exports.responses['sessionStorageError']); return false;}
+		
+		if (!result) {callback(exports.responses['sessionNotFound']); return false;}
 		                                  
+    //TODO: add this information to the result hash from redis
 		var sessionData = {'players': []};
+		
 		client.hset("activeSessions", id, sessionData, function(e, result) {
 			if (e) {callback(exports.responses['sessionStorageError']); return false;}
 			
@@ -32,21 +46,114 @@ exports.initSession = function(id, callback) {
 }
 
 gh.get("/session", function() {
+  this.disableCache();
+  
+  this.model['display'] = "How about a nice game of global thermonuclear war?"
+  
   //TODO: add a view, populate a list of active sessions from a model
   //TODOTODO: it would be nice to password protect these eventually, right?
-  this.renderText("What session do you want to join?");
+  //          actually maybe not? we should still list them here
+  var self = this;
+  client.hgetall("sessions", function(e, result) {
+    sys.puts("got this result from hgetall sessions: " + result);    
+    //util.inspect(result);
+    
+    if (!result) {result = []}
+      
+    var displayResult = [];
+    var i = 0;
+    _.each(result, function(v, k, l) {
+      //sys.puts("looping over list with key: " + k + " and value: " + v);
+      
+      displayResult[i] = new Object;
+      displayResult[i].name = v;
+      displayResult[i++].id = k;
+    });
+    
+    
+    var activeSessions = [
+      {"name" : "There are no active sessions. Maybe you should create one?",
+      "href" : "/session/create"}
+    ]
+    
+    self.model['activeSessions'] = activeSessions;
+    
+    self.model['sessions'] = displayResult;
+    self.render("session");
+    
+  });
+  
 });
+
+gh.get("/session/delete", function() {
+  var self = this;
+  
+  var callback = function(text) {    
+    self.model['display'] = text || "Deleted all existing sessions.";
+    self.model['sessions'] = [];
+    
+    self.render("session");
+  }
+  
+  client.hkeys("sessions", function(e, keys) {
+    if (!keys) {return callback("No sessions to delete!")}
+    
+    _.each(keys, function(sessionId) {
+      sys.puts("trying to delete session with id: " + sessionId);
+      
+      client.hdel(sessionId, function(e, result) { sys.puts("deleted: " + sessionId + " hash obj") });
+      
+      client.hdel("sessions", sessionId, function(e, result) {
+        sys.puts("deleted sessionId: " + sessionId);
+      });
+    });
+    
+    callback("Finished deleting all sessions.");
+  });
+})
 
 gh.get("/session/create", function(args) {
-  this.render("session.create");
+  this.render("sessions/create");
 });
 
-gh.post("/session/create/", function(args) {
-  this.renderText("Not implemented sorry");
+gh.post("/session/create", function(args) {
+  var name = this.params['name'],
+      max = this.params['maxPlayer'],
+      pass = this.params['password'];
+      id = Math.uuid();      
+  
+  if (errors.isEmpty([name, max])) {
+    this.renderText("Name and Max # of players are required fields.");
+    return;
+  }
+  
+  var self = this;
+    
+  client.hset("sessions", id, name, function(e, result) {
+    if (e) { return self.renderText(exports.responses['sessionStorageError']);}
+    
+    client.hmset(id, "name", name, "id", id, "max", max, "pass", pass, function(e, res) {
+       if (e) {
+         //failed to write session data, rrrrroll back
+         sys.puts("wrote sessionID, but no data. Welp.");
+         client.hdel("sessions", id, function(e, r) {
+            self.model['display'] = exports.responses['sessionStorageError'];
+            self.render("session");
+            
+            return;
+           });
+       }
+       self.model['display'] = exports.responses['sessionCreated'];
+       self.model['sessions'] = [];
+       
+       self.render("session");
+    });
+  });
+  
 });
   
 /*
-  The way this works is that we grab the name of the session, match it in our DB
+  The way this works is that we grab the name of the session, match it in redis
   and then set up a client.subscribeTo with a callback. This callback will handle all messages and push them to 
   a hash that clients will be able to access via "/session/listen/{id}"
   

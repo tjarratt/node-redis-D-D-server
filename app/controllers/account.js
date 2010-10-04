@@ -14,7 +14,7 @@ exports.responses = {
   
   'accountSuccess' : [200, "Account created successfully."],
   'accountInputFailure' : [409, "username and password are necessary for account creation.\n"],
-  'accountError' : [500, "whoa something ba happened when trying to creat your account. Sorry bro."],
+  'accountError' : [500, "whoa something bad happened when trying to create your account. Sorry bro."],
   'accountExistsError' : [409, "Username already exists. Please choose another name."],
 }
 
