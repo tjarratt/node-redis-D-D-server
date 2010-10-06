@@ -35,6 +35,12 @@ gh.get("/maps/{id}", function(args) {
  });//getall
 });
 
+/*
+  For now, create a map that only has the meta data
+  we can push the file uplaod to a separate process
+  ideally, this would all be completed via ajax on the client
+*/
+
 gh.post("/maps/new", function(args) {
   if (!args) {
     return this.renderText("Need to specify some arguments, brutha");
@@ -63,3 +69,90 @@ gh.post("/maps/new", function(args) {
     });
   });
 });
+
+/*
+  Yay, frankenstein code
+  This depends intricately on the request (set encoding binary, streams, )
+*/
+
+gh.post("/maps/{id}/file", function(args) {
+  var self = this;
+  
+  //start handling multipart upload
+  request.setEncoding('binary');
+  
+  var stream = parse_multipart(request);
+	
+	var fileName = null;
+  var fileStream = null;
+
+  // Set handler for a request part received
+  stream.onPartBegin = function(part) {
+      // Construct file name
+      fileName = "/nodeUploads/" + stream.part.filename;
+
+      // Construct stream used to write to file
+      fileStream = fs.createWriteStream(fileName);
+
+      // Add error handler
+      fileStream.addListener("error", function(err) {
+          sys.debug("Got error while writing to file '" + fileName + "': ", err);
+      });
+
+      // Add drain (all queued data written) handler to resume receiving request data
+      fileStream.addListener("drain", function() {
+          request.resume();
+      });
+  };
+
+  // Set handler for a request part body chunk received
+  stream.onData = function(chunk) {
+      // Pause receiving request data (until current chunk is written)
+      request.pause();
+
+      // Write chunk to file
+      // Note that it is important to write in binary mode
+      // Otherwise UTF-8 characters are interpreted
+      fileStream.write(chunk, "binary");
+  };
+
+  // Set handler for request completed
+  stream.onEnd = function() {
+    // As this is after request completed, all writes should have been queued by now
+    // So following callback will be executed after all the data is written out
+    fileStream.addListener("drain", function() {
+      // Close file stream
+      fileStream.end();
+
+      var id = Math.uuid();
+		  var mapData = maps.create(user, fileName, id);
+		  //sys.puts("id: " + id + "\ndata: " + sys.inspect(mapData));
+
+		  client.rpush(user + "/maps", mapData, function(e, result) {return false;});
+      // Handle request completion, as all chunks were already written
+      upload_complete(response, id);
+    });
+  }
+});
+
+/*
+ * Create multipart parser to parse given request
+ */
+function parse_multipart(req) {
+	var multipart = require('lib/multipart');
+    var parser = multipart.parser();
+
+    // Make parser use parsed request headers
+    parser.headers = req.headers;
+
+    // Add listeners to request, transfering data to parser
+    req.addListener("data", function(chunk) {
+        parser.write(chunk);
+    });
+
+    req.addListener("end", function() {
+        parser.close();
+    });
+
+    return parser;
+}

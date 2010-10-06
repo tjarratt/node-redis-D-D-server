@@ -4,7 +4,7 @@ var errorHandler = require("./util/err");
 var gh = require('grasshopper');
 var io = require('socket.io');
 
-var util = require('util/util');
+var util = require('./util/util');
 var json = JSON.stringify;
 
 gh.configure({
@@ -30,7 +30,7 @@ gh.configure({
 gh.get("/", function() {
   this.disableCache();
   var now = new Date();
-  sys.puts(now);
+
   this.model['now'] = now;
   this.render('home');
 });
@@ -73,7 +73,7 @@ var tryStart = function() {
     sys.log("gh not started yet, waiting for nextTick to start socket server.");
     return process.nextTick(tryStart);
   }
-  StartSocket();
+  //StartSocket();
 }
 
 tryStart();
