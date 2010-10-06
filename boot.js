@@ -48,7 +48,6 @@ var StartSocket = function() {
   
   socket.on('connection', function(client){
     sys.puts("client connected with id: " + client.sessionId);
-    sys.puts("sending message: " + buffer);
     util.inspect(buffer);
     
   	client.send(json({ buffer: buffer }));
@@ -73,7 +72,7 @@ var tryStart = function() {
     sys.log("gh not started yet, waiting for nextTick to start socket server.");
     return process.nextTick(tryStart);
   }
-  //StartSocket();
+  StartSocket();
 }
 
 tryStart();

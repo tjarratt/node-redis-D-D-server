@@ -32,7 +32,6 @@
 	      socket.connect();
 	      socket.on("message", function(data){
 			var obj = JSON.parse(data);
-			//var obj = io.util.JSON.decode(data);
 		
 	        if ("buffer" in obj){
 	          document.getElementById("form").style.display="block";

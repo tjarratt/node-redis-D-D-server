@@ -14,8 +14,22 @@
 			<input type="submit" name="submitSession" value="save changes" />
 		</form>
 	</div>
-	<div class="formElement">
+	<div id="mapsContainer" class="formElement">
 		<p id="mapLoading">Loading available maps...</p>
+		<div id="mapListHeader" style="display:none">
+			<span class="mapName" style="padding: 20px;" >Name</span>
+			<span class="mapWidth" style="padding: 20px;" >Width</span>
+			<span class="mapHeight" style="padding: 20px;" >Height</span>
+			<span class="mapHeight" style="padding: 20px;" >Image</span>
+		<div id="mapsList" style="display:none">
+			<div class="mapInnerContainer">
+				<a href="#">
+					<span class="mapName" style="padding: 20px;" ></span>
+				</a>
+				<span class="mapWidth" style="padding: 20px;" ></span>
+				<span class="mapHeight" style="padding: 20px;" ></span>
+			</div>
+		</div>
 	</div>
 	<div class="clear"></div>
 	<div class="formElement">
@@ -26,26 +40,45 @@
 		<div class="clear"></div>
 		<input type="text" id="mapHeight" name="height" />Height
 		<div class="clear"></div>
+		<input type="file" name="file" size="40" />
+		<div class="clear"></div>
 		<input type="submit" name="submitSession" value="save thisMap" onclick="uploadMap();">
 	</div>
 </div>
 <div class="scripts">
 	<script language="javascript">
-		var id = $("div#editId");
+		var id = $("div.editId").attr("id");
 		id = id? id : 0;
 		var errorCallback = function(err) {
-			$("p#mapLoading").html("An error occurred? Perhaps, there is no spoon?");
-			$("p#mapLoading").parent().append("<p>Details:" + err.toString() + "</p>");
+			$("p#mapLoading").html("Hmm, that wasn't quite a success. Perhaps, there is no spoon?");
+			$("p#mapLoading").parent().append("<p>Details: " + err.toString() + "</p>");
 		}
 
 		$.ajax({
 			async: true,
 			url: "/maps/" + id,
 			success: function(response) {
-				console.log(response);
+				response = JSON.parse(response);
 				if (response == "false") {
 					errorCallback("I found no maps. Oh my god. What does this mean?");
 				}
+				
+				var $list = $("div#mapsList");
+				var mapHTML = $list.html();
+				$list.html("");
+				
+				$.each(response, function(index, mapObj) {
+					$list.append(mapHTML);
+					var $newMapItem = $list.children("div:last");
+
+					$newMapItem.children("a").attr("href", "/maps/" + mapObj.id);
+					$newMapItem.find("span.mapName").html(mapObj.name);
+					$newMapItem.children("span.mapWidth").html(mapObj.width);
+					$newMapItem.children("span.mapHeight").html(mapObj.height);
+				});
+				$("div#mapListHeader").show();
+				$list.show();
+				$("p#mapLoading").hide();
 			},
 			error: function(err) {
 				errorCallback(err);
@@ -53,18 +86,33 @@
 		});
 		var uploadMap = function() {
 			var data = {
-				id: $("div#editId").id,
+				id: $("div.editId").attr("id"),
 				name: $("input#mapName").val(),
 				width: $("input#mapWidth").val(),
 				height : $("input#mapHeight").val()
 			}
 			var mapCreationCallback = function(transport) {
-				alert("hurf durf")
+				//TODO: need to indicate that this failed
+				if (!transport) {return;}
+				
+				//TODO: abstract away some of this so we can reuse it
+				var $list = $("div#mapsList");
+				var mapHTML = $list.children("div:last");
+				
+				
+				//okay, multipart fileupload time
+				/*$.ajax({
+					url: "/maps/" + transport,
+					type: "POST",
+					data: 
+				});*/
 			}
-			$.ajax(
-				url: "localhost/maps/" + data.id,
-				success: mapCreationCallback
-				);
+			$.ajax({
+				url: "/maps/new",
+				type: "POST",
+				data: data,
+				success: mapCreationCallback,
+			});     
 		}
 	</script>
 </div>
