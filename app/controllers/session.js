@@ -11,15 +11,12 @@ require("../../lib/underscore-min")
 
 var gh = require('grasshopper');
 
-//socket.io I choose you!
-//io = require('socket.io');
-//var socket = io.listen(gh.server);
-
 exports.responses = {
   'sessionStorageError' : [500, "An error occurred while processing your request."],
   'sessionNotFound' : [403, 'No session was found'],
   'sessionInitOkay' : [301, "Your session has been started with id:"],
-  'sessionCreated' : [200, "Your session has been successfully created."]
+  'sessionCreated' : [200, "Your session has been successfully created."],
+  'notEnoughInfo' : [400, "You did not supply enough information for this request."]
 }
 
 exports.initSession = function(id, callback) {
@@ -152,6 +149,8 @@ gh.post("/session/create", function(args) {
   
 });
   
+  //ignore the comment below, we're using websockets now, with some fallback for weaksauce browsers (prob xhr)
+  
 /*
   The way this works is that we grab the name of the session, match it in redis
   and then set up a client.subscribeTo with a callback. This callback will handle all messages and push them to 
@@ -180,11 +179,23 @@ gh.post("/session/start/{name}", function(args) {
   exports.initSession(name, initializedCallback);
 });
 
-gh.get("/session/listen/{id}", function(args) {
-  var lastTime = args.time ? args.time : 0;
-  this.renderText("No messages yet");
-});
-
-gh.post("/session/listen/{id}", function(args) {
-  this.renderText("not implemented yet");
+gh.get("/session/edit/{id}", function(args) {
+  var self = this,
+      id = args.id;
+  
+  if (errors.isEmpty([id])) {return exports.responses['notEnoughInfo']}
+    
+  client.hmget(id, "name", "max", "pass", function(e, result) {
+    if (e) {return exports.responses['sessionStorageError']}
+    name = result[0];
+    max = result[1];
+    pass = result[2] ? result[2] : "none";
+    
+    self.model['name'] = name;
+    self.model['max'] = max;
+    self.model['pass'] = pass? pass : "none";
+    self.model['id'] = id;
+    
+    self.render("sessions/edit");
+  });
 });

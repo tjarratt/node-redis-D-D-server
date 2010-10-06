@@ -3,17 +3,6 @@
     <form id="form" onsubmit="send(); return false">
       <input type="text" autocomplete="off" id="text"><input type="submit" value="Send">
     </form>
-    
-    <style>
-      #chat { height: 300px; overflow: auto; width: 800px; border: 1px solid #eee; font: 13px Helvetica, Arial; }
-      #chat p { padding: 8px; margin: 0; }
-      #chat p:nth-child(odd) { background: #F6F6F6; }
-      #form { width: 782px; background: #333; padding: 5px 10px; display: none; }
-      #form input[type=text] { width: 700px; padding: 5px; background: #fff; border: 1px solid #fff; }
-      #form input[type=submit] { cursor: pointer; background: #999; border: none; padding: 6px 8px; -moz-border-radius: 8px; -webkit-border-radius: 8px; margin-left: 5px; text-shadow: 0 1px 0 #fff; }
-      #form input[type=submit]:hover { background: #A2A2A2; }
-      #form input[type=submit]:active { position: relative; top: 2px; }
-    </style>
 <div>
 	<script language="javascript">
 		function message(obj){
@@ -52,6 +41,8 @@
 	          for (var i in obj.buffer) message(obj.buffer[i]);
 	        } else message(obj);
 	      });
+	
+		  $("div#text").focus();
 	</script>
 </div>
 <div style="display:none">

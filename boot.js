@@ -16,7 +16,13 @@ gh.configure({
     //locales: require('./locales')
 });
 
-["account", "find", "map", "session", "talk", "join"
+["account", 
+  "find", 
+  "map", 
+  "session", 
+  "talk", 
+  "join",
+  "map"
 ].forEach(function(controller) {
     require("./app/controllers/" + controller);
 });
@@ -38,29 +44,8 @@ var buffer = [], json = JSON.stringify;
 
 var StartSocket = function() {
   sys.puts("starting up socket.io");
-  
   var socket = io.listen(gh.server);
-    
-  /*sys.puts("inspecting io socket obj");
-  util.inspect(socket);
-
-  	onClientConnect: function(client){
-  		client.send(json({ buffer: buffer }));
-  		client.broadcast(json({ announcement: client.sessionId + ' connected' }));
-  	},
-
-  	onClientDisconnect: function(client){
-  		client.broadcast(json({ announcement: client.sessionId + ' disconnected' }));
-  	},
-
-  	onClientMessage: function(message, client){
-  		var msg = { message: [client.sessionId, message] };
-  		buffer.push(msg);
-  		if (buffer.length > 15) buffer.shift();
-  		client.broadcast(json(msg));
-  	}
-
-  });*/
+  
   socket.on('connection', function(client){
     sys.puts("client connected with id: " + client.sessionId);
     sys.puts("sending message: " + buffer);
@@ -85,7 +70,7 @@ var StartSocket = function() {
 
 var tryStart = function() {
   if (gh.server == null) {
-    sys.log("gh not started yet, waiting for nextTick");
+    sys.log("gh not started yet, waiting for nextTick to start socket server.");
     return process.nextTick(tryStart);
   }
   StartSocket();

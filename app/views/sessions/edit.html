@@ -1,0 +1,70 @@
+<h3>Edit the fuck out of your session. Go hog wild!</h3>
+<div class="editId" id="<%=id%>">
+	<div class="formElement">
+		<form action="/session/edit/<%= id %>" method="post">
+			<input type="text" value="<%= name %>" name="name"/>
+			Session name
+			<div class="clear"></div>
+			<input type="text" value="<%= max %>" name="maxPlayer" value="0"/>
+			Max number of players
+			<div class="clear"></div>
+			<input type="text" value="****" name="password"/>
+			Password (Optional)
+			<div class="clear"></div>
+			<input type="submit" name="submitSession" value="save changes" />
+		</form>
+	</div>
+	<div class="formElement">
+		<p id="mapLoading">Loading available maps...</p>
+	</div>
+	<div class="clear"></div>
+	<div class="formElement">
+		<h4>Add a new map to this game session</h4>
+		<input type="text" id="mapName" name="name" />Give it a name
+		<div class="clear"></div>
+		<input type="text" id="mapWidth" name="width" />Width
+		<div class="clear"></div>
+		<input type="text" id="mapHeight" name="height" />Height
+		<div class="clear"></div>
+		<input type="submit" name="submitSession" value="save thisMap" onclick="uploadMap();">
+	</div>
+</div>
+<div class="scripts">
+	<script language="javascript">
+		var id = $("div#editId");
+		id = id? id : 0;
+		var errorCallback = function(err) {
+			$("p#mapLoading").html("An error occurred? Perhaps, there is no spoon?");
+			$("p#mapLoading").parent().append("<p>Details:" + err.toString() + "</p>");
+		}
+
+		$.ajax({
+			async: true,
+			url: "/maps/" + id,
+			success: function(response) {
+				console.log(response);
+				if (response == "false") {
+					errorCallback("I found no maps. Oh my god. What does this mean?");
+				}
+			},
+			error: function(err) {
+				errorCallback(err);
+			}
+		});
+		var uploadMap = function() {
+			var data = {
+				id: $("div#editId").id,
+				name: $("input#mapName").val(),
+				width: $("input#mapWidth").val(),
+				height : $("input#mapHeight").val()
+			}
+			var mapCreationCallback = function(transport) {
+				alert('hurf durf')
+			}
+			$.ajax(
+				url: "localhost/maps/" + data.id,
+				success: mapCreationCallback
+				);
+		}
+	</script>
+</div>
