@@ -13,10 +13,3 @@ div.scripts {
 #form input[type=submit] { cursor: pointer; background: #999; border: none; padding: 6px 8px; -moz-border-radius: 8px; -webkit-border-radius: 8px; margin-left: 5px; text-shadow: 0 1px 0 #fff; }
 #form input[type=submit]:hover { background: #A2A2A2; }
 #form input[type=submit]:active { position: relative; top: 2px; }
-
-div.mapInnerContainer {
-  width: 350px;
-}
-span.file-uploader {
-  float:right;
-}

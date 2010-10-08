@@ -12,8 +12,7 @@ gh.get("/talk", function() {
 gh.post("/talk", function(args) {
   var message = this.params['message'];
   if (errors.isEmpty([message])) {
-    this.renderText("Failed, you should provide a message maybe?");
-    return;
+    return this.renderText("Failed, you should provide a message maybe?");
   }
   
   //little bit of cleanup
@@ -21,26 +20,17 @@ gh.post("/talk", function(args) {
     message = message.substr(0, message.indexOf(";"));
   }
   if (message.indexOf("&") >= 0) {
-    message = message.substr(0, message.indexOf("&&"));
+    message = message.substr(0, message.indexOf("&"));
   }
   
   if (/^[A-Za-z0-9\s]*$/.test(message) != true) {
     message = "wakka wakka you fool try harder next time";
   }
-  
-  if (message.length <= 1) {
-    this.renderText("Say nothing once? Why say it again? (sanitzed: " + message + ")");
-    return;
-  }
-    
-  var self = this;
-  var callback = function() {
-    self.renderText("Hear anything yet?");
-  }
-  
+
   //TODO: execute `which say` to see if it's available first
   //TODO: validate input better, it would not be fun to have someone find a way to run rm -Rf /* 
   //      (even though node is never run as root)
   
-  exec("say -v cellos " + message, callback);
+  exec("say -v cellos " + message);
+  self.renderText("Hear anything yet?");
 });

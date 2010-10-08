@@ -70,6 +70,8 @@ var StartSocket = function() {
 var tryStart = function() {
   if (gh.server == null) {
     sys.log("gh not started yet, waiting for nextTick to start socket server.");
+    
+    //would probably be more effective to just listen for an event that GH emits when it's done starting up
     return process.nextTick(tryStart);
   }
   StartSocket();

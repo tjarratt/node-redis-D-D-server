@@ -180,11 +180,14 @@ gh.post("/session/start/{name}", function(args) {
 });
 
 gh.get("/session/edit/{id}", function(args) {
+  this.disableCache();
+  
   var self = this,
       id = args.id;
   
   if (errors.isEmpty([id])) {return exports.responses['notEnoughInfo']}
     
+  //TODO: need to also return a list of maps, images for this request
   client.hmget(id, "name", "max", "pass", function(e, result) {
     if (e) {return exports.responses['sessionStorageError']}
     name = result[0];

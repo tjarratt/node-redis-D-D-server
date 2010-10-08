@@ -28,6 +28,11 @@
 				</a>
 				<span class="mapWidth" style="padding: 20px;" ></span>
 				<span class="mapHeight" style="padding: 20px;" ></span>
+				<div class="file-uploader">
+					<noscript>
+						Please enable Javascript
+					</noscript>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -40,9 +45,6 @@
 		<div class="clear"></div>
 		<input type="text" id="mapHeight" name="height" />Height
 		<div class="clear"></div>
-		<input type="file" name="file" size="40" />
-		<div class="clear"></div>
-		<input type="submit" name="submitSession" value="save thisMap" onclick="uploadMap();">
 	</div>
 </div>
 <div class="scripts">
@@ -52,6 +54,76 @@
 		var errorCallback = function(err) {
 			$("p#mapLoading").html("Hmm, that wasn't quite a success. Perhaps, there is no spoon?");
 			$("p#mapLoading").parent().append("<p>Details: " + err.toString() + "</p>");
+		}
+		
+		function ajaxFileUpload(context) {
+			var fileInput = $(context).parent().children(":first")[0];
+		 
+	        $.ajaxFileUpload({
+	                url: "/maps/" + id + "/upload",
+	                secureuri: false,
+	                fileElementId: $(fileInput).attr("id"),
+	                dataType: "json",
+					type: "POST",
+	                beforeSend:function() {
+	                    $("#loading").show();
+	                },
+	                complete:function() {
+	                    $("#loading").hide();
+	                },              
+	                success: function (data, status) {
+	                    if(typeof(data.error) != "undefined") {
+	                        if(data.error != "") {
+	                            alert(data.error);
+	                        }
+							else {
+	                            alert(data.msg);
+	                        }
+	                    }
+	                },
+	                error: function (data, status, e) {
+	                    alert(e);
+	                }
+            });
+	        return false;
+		}
+		
+		onUpload = function(context) {
+			//context of this should be the save input element
+			//ideally we could listen for a "chose file" event rather than using ANOTHER input element
+			var fileInput = $(context).parent().children(":first")[0];
+			console.log(fileInput.files);
+			
+			var file = fileInput.files[0];
+			
+			console.log(file.name);
+			console.log(file.size);
+			console.log(file.type);
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", "/maps/" + id + "/upload", true);
+			
+			function onprogressHandler(evt) {
+			    var percent = event.loaded/event.total*100;
+			    console.log("Upload progress: " + percent + "%");
+			}
+			
+			function setBody(name, value)
+			{
+				var body = "--" + boundary + "\\r\\n";
+				body += "Content-Disposition: form-data; name=\'" + name + "\'" + "\\r\\n\\r\\n";
+				body += value + "\\r\\n";
+				return body;
+			}
+			
+			
+			var boundary = "Boundary_" + new Date().getMilliseconds() + ";";
+			var body = setBody("formfield", file.toString());
+			body += "--" + boundary; //end of body
+			
+			xhr.setRequestHeader("X-File-Name", file.name);
+			xhr.setRequestHeader("Content-Type", "multipart/form-data;boundary="+boundary+"; charset=UTF-8");
+			xhr.upload.addEventListener("progress", onprogressHandler, false);
+			xhr.send(body); // Less Simple...
 		}
 
 		$.ajax({
@@ -75,6 +147,20 @@
 					$newMapItem.find("span.mapName").html(mapObj.name);
 					$newMapItem.children("span.mapWidth").html(mapObj.width);
 					$newMapItem.children("span.mapHeight").html(mapObj.height);
+					
+					//need to actually retrieve a list of maps as well
+					if (mapObj.file == "null") {						
+						var uploadHTML = "<input id=\'upload" + index + "\' type=\'file\' name=\'file\'/> <div class=\'clear\'></div>";
+						uploadHTML += "<input type=\'submit\' onclick=\'return ajaxFileUpload(this);\' value=\'Send\'>";
+						
+						$newMapItem.children("div.file-uploader").html(uploadHTML);
+					}
+					else {
+						//need an interface here to delete files
+						//probably just an a tag with an X img next to it
+						$newMapItem.children("div.file-uploader").html(mapObj.file);
+					}
+					
 				});
 				$("div#mapListHeader").show();
 				$list.show();
@@ -91,21 +177,17 @@
 				width: $("input#mapWidth").val(),
 				height : $("input#mapHeight").val()
 			}
+			
 			var mapCreationCallback = function(transport) {
 				//TODO: need to indicate that this failed
-				if (!transport) {return;}
+				if (!transport || transport.success != true || !transport.id) {return;}
 				
 				//TODO: abstract away some of this so we can reuse it
+				//add the map that we just saved to the list of maps visible here
+				//(or we could do this before submission....)
 				var $list = $("div#mapsList");
 				var mapHTML = $list.children("div:last");
 				
-				
-				//okay, multipart fileupload time
-				/*$.ajax({
-					url: "/maps/" + transport,
-					type: "POST",
-					data: 
-				});*/
 			}
 			$.ajax({
 				url: "/maps/new",
