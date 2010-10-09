@@ -36,11 +36,10 @@ gh.get("/join/{id}", function(args) {
     client.rpush(id + "/users", thisUser, function(e, result) {
       //send back a timestamp and id where the user can listen for messages / updates
       var now = new Date();
-      var listenId = id + "/listen";
       
       self.model['display'] = responses['joinSuccess'];
       self.model['startTime'] = now;
-      self.model['listenId'] = listenId;
+      self.model['_listenId'] = id;
       
       self.render("room");
     });

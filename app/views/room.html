@@ -1,52 +1,172 @@
 <h2><%= display %></h2>
-<div id="chat"><p>Connecting...</p></div>
-    <form id="form" onsubmit="send(); return false">
-      <input type="text" autocomplete="off" id="text"><input type="submit" value="Send">
-    </form>
+<div id="chat">
+	<p>Connecting...</p>
+</div>
+<form id="form" onsubmit="send(); return false">
+  <input type="text" autocomplete="off" id="text"><input type="submit" value="Send">
+</form>
+
+<div id="canvasContainer">
+	<img class="player" src="/res/img/Tokens.png" />
+	<canvas id="map" width="700" height="500">
+</div>
 <div>
 	<script language="javascript">
-		function message(obj){
-	        var el = document.createElement("p");
-	        if ("announcement" in obj) el.innerHTML = "<em>" + esc(obj.announcement) + "</em>";
-	        else if ("message" in obj) el.innerHTML = "<b>" + esc(obj.message[0]) + ":</b>" + esc(obj.message[1]);
-	        document.getElementById("chat").appendChild(el);
-	        document.getElementById("chat").scrollTop = 1000000;
-	      }
+	  function message(obj){
+        var el = document.createElement("p");
+        if ("announcement" in obj) el.innerHTML = "<em>" + esc(obj.announcement) + "</em>";
+        else if ("message" in obj) el.innerHTML = "<b>" + esc(obj.message[0]) + ":</b>" + esc(obj.message[1]);
+        document.getElementById("chat").appendChild(el);
+        document.getElementById("chat").scrollTop = 1000000;
+      }
 
-	      function send(){
-	        var val = document.getElementById("text").value;
-			console.log("trying to send message: " + val);
+      function send(){
+        var val = document.getElementById("text").value;
+		console.log("trying to send message: " + val);
+
+        socket.send(val);
+        message({ message: ["you", val] });
+        document.getElementById("text").value = "";
+      }
+
+      function esc(msg){
+        return msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      };
+       
+	  console.log("about to create socket")
 	
-	        socket.send(val);
-	        message({ message: ["you", val] });
-	        document.getElementById("text").value = "";
-	      }
-
-	      function esc(msg){
-	        return msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-	      };
-        
-		  console.log("about to create socket")
-		
-	      var socket = new io.Socket(null, {port: 8080});
-	      socket.connect();
-	      socket.on("message", function(data){
-			var obj = JSON.parse(data);
-		
-	        if ("buffer" in obj){
-	          document.getElementById("form").style.display="block";
-	          document.getElementById("chat").innerHTML = "";
-
-	          for (var i in obj.buffer) message(obj.buffer[i]);
-	        } else message(obj);
-	      });
+      var socket = new io.Socket("localhost", {port: 8080});
+	  io.setPath("/");
+      socket.connect();
+      socket.on("message", function(data){
+		var obj = JSON.parse(data);
 	
-		  $("div#text").focus();
+        if ("buffer" in obj){
+          document.getElementById("form").style.display="block";
+          document.getElementById("chat").innerHTML = "";
+
+          for (var i in obj.buffer) message(obj.buffer[i]);
+        } else message(obj);
+      });
+
+	  $("div#text").focus();
+	               
+	  var canvas = $("canvas#map")[0]
+	  var ctx = canvas.getContext("2d");
+	  var img = new Image();
+	  img.src = "/res/img/<%=_listenId%>.jpg";
+	  img.onload = function(){
+	    ctx.drawImage(img,0,0);
+	    ctx.beginPath();
+		//going to assume we want a 14 x 10 grid
+		//(x, y)
+	    ctx.moveTo(0, 0);
+			//might it not be easier to do this with a series of transparent squares?
+			for (var i = 1; i <= 14; i ++) {
+				ctx.lineTo(i * 50, 0);
+				ctx.lineTo(i * 50, 500);
+				ctx.lineTo(i * 50 + 50, 500);
+				ctx.lineTo(i * 50 + 50);
+			}
+			ctx.stroke();
+		
+			//TODO: can we keep the stroke where it was before?
+			ctx.moveTo(0, 0);
+			for (var j = 1; j <= 14; j++) {
+				ctx.lineTo(0, j * 50);
+				ctx.lineTo(700, j*50);
+				ctx.lineTo(700, j*50 + 50);
+				ctx.lineTo(0, j*50 + 50);
+			}
+			ctx.stroke();
+		
+			ctx.moveTo(0, 500);
+			ctx.lineTo(0,0);
+			ctx.lineTo(700, 0);
+			ctx.stroke();
+	  } 
+	
+	  document.onmousemove = mouseMove;
+		document.onmouseup   = mouseUp;
+
+		var dragObject  = null;
+		var mouseOffset = null;
+	
+		function mouseCoords(ev){
+			if(ev.pageX || ev.pageY){
+				console.log("coords x: " + ev.pageX + " y: " + ev.pageY);
+				return {x:ev.pageX, y:ev.pageY};
+			}
+			var result = {
+				x:ev.clientX + document.body.scrollLeft - document.body.clientLeft,
+				y:ev.clientY + document.body.scrollTop  - document.body.clientTop
+			}
+			console.log("coords x: " + result.x + " y: " + result.y);
+			return result;
+		}
+
+		function getMouseOffset(target, ev){
+			ev = ev || window.event;
+
+			var docPos    = getPosition(target);
+			var mousePos  = mouseCoords(ev);
+			var result = {x:mousePos.x - docPos.x, y:mousePos.y - docPos.y};
+			console.log("x " + result.x + " y: " + result.y);
+		
+			return result;
+		}
+
+		function getPosition(e){
+			var left = 0;
+			var top  = 0;
+
+			while (e.offsetParent){
+				left += e.offsetLeft;
+				top  += e.offsetTop;
+				e     = e.offsetParent;
+			}
+
+			left += e.offsetLeft;
+			top  += e.offsetTop;
+
+			return {x:left, y:top};
+		}
+
+		function mouseMove(ev){
+			ev           = ev || window.event;
+			var mousePos = mouseCoords(ev);
+
+			if(dragObject){
+				dragObject.style.position = "absolute";
+				dragObject.style.top      = mousePos.y - mouseOffset.y;
+				dragObject.style.left     = mousePos.x - mouseOffset.x;
+
+				return false;
+			}
+		}
+		function mouseUp(){
+			dragObject = null;
+		}
+
+		function makeDraggable(item){
+			if(!item) return;
+			item.onmousedown = function(ev){
+				dragObject  = this;
+				mouseOffset = getMouseOffset(this, ev);
+				return false;
+			}
+		}    
+	
+		var players = $("img.player");
+		makeDraggable(players[0]);
+		players[0].style.top = 0;
+		players[0].style.left = 0;
+	
+
+	  //initialize some basic values
+	  _initial = [0,0];
+	  _matching = false;
+	  _$dude = $("img.player");    
+		
 	</script>
-</div>
-<div style="display:none">
-	<%= startTime %>
-</div>
-<div style="display:none">
-	<%= listenId %>	
 </div>
