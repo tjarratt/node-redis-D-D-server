@@ -38,7 +38,6 @@ gh.get("/join/{id}", function(args) {
       var now = new Date();
       
       self.model['display'] = responses['joinSuccess'];
-      self.model['startTime'] = now;
       self.model['_listenId'] = id;
       
       self.render("room");

@@ -39,22 +39,28 @@ gh.serve(8080);
 sys.puts("Server running on port 8080");
 
 //initialize socket.io : I choose you!
-//exported http.server from grasshopper
 var buffer = [], json = JSON.stringify;
 
 var StartSocket = function() {
   sys.puts("starting up socket.io");
+  //exported http.server from grasshopper
   var socket = io.listen(gh.server);
   
   socket.on('connection', function(client){
-    sys.puts("client connected with id: " + client.sessionId);
-    util.inspect(buffer);
+    //need to match this sessionId with a user name somehow
+    sys.puts("client connected ... inspecting:");
+    util.inspect(client);
     
   	client.send(json({ buffer: buffer }));
   	client.broadcast(json({ announcement: client.sessionId + ' connected' }));
 
   	client.on('message', function(message){
   		var msg = { message: [client.sessionId, message] };
+  		
+  		//this buffer does nothing currently but store a list of the last 15 messages
+  		//may want to investigate using it to actually buffer client messages
+  		//we would need to either call process.onNextTick or setTimeOut to use this effectively
+  		//storing it in redis may not be a bad idea either, since actions there are atomic
   		buffer.push(msg);
   		if (buffer.length > 15) buffer.shift();
   		client.broadcast(json(msg));
