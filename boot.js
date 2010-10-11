@@ -63,6 +63,16 @@ var StartSocket = function() {
   		//storing it in redis may not be a bad idea either, since actions there are atomic
   		buffer.push(msg);
   		if (buffer.length > 15) buffer.shift();
+  		
+  		//ARGH, socket.io only supports blacklists by default
+  		/*
+        Updated my socket.io fork on accept a whitelist on the broadcastTo method,
+        What we should do now is either:
+          require the user specify the room in their message (hmmmmm, probably not a good idea)
+          or 
+          lookup which room this user is in, which we should have in redis, then remove the user from that list and broadcoast via the whitelist
+  		*/
+  		
   		client.broadcast(json(msg));
   	});
 
