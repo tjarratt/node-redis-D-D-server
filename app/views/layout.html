@@ -2,7 +2,6 @@
     <head>
         <title>Tabletop Server</title>
 		<!--TODO: set the title here as a variable the view will set (SEO-ish) -->
-		<!-- TODO: javascript, css-->
 		<!--CDN>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js" type="text/javascript"></script>
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js" type="text/javascript"></script>-->
@@ -13,39 +12,16 @@
 		<!--<script src="/lib/ajaxfileupload.js" type="text/javascript"></script>-->
 		<link rel="stylesheet" type="text/css" href="/res/css/fileuploader.css" />
 		<link rel="stylesheet" type="text/css" href="/res/css/dnd.css?v=11" />
-		<style type="text/css">
-			div#canvasContainer {
-				float:right;
-			}
-			div#chat {
-				width: 500px;
-			}
-			form#form {
-				width: 482px;
-			}
-			input#text {
-				width: 400px!important;
-			}
-			div#canvasContainer {
-				position: relative;
-				margin-top:-355;
-			}
-		</style>
     </head>
     <body vlink="blue">
-        <a href="/">Home</a>
-        |
-        <a href="/account">Account</a>
-        |
-        <a href="/session">Start / Join a Session</a>
-        |
-        <a href="/map">Maps</a>
-        |
-		<a href="/pc">Characters</a> 
-		|
-		<a href="/talk">Talk</a>
-		<div id="container">
-	        <%= include(view) %>
-		</div>
+        <a href="/">Home</a> |
+        <a href="/account">Account</a> |
+        <a href="/session">Start / Join a Session</a> |
+        <a href="/map">Maps</a> |
+				<a href="/pc">Characters</a> |
+				<a href="/talk">Talk</a>
+				<div id="container">
+		        <%= include(view) %>
+				</div>
     </body>
 </html>
