@@ -20,7 +20,7 @@ gh.get("/join/{id}", function(args) {
   var self = this;
   var id = args.id;
                                     
-  //actually, should be reading this from a cookie : too lazy to implement yet
+  //actually, should be reading this from a cookie : too busy to implement yet
   if (!this.params) {
     return this.renderText(responses['noUserError']);
   }
@@ -39,6 +39,8 @@ gh.get("/join/{id}", function(args) {
       
       self.model['display'] = responses['joinSuccess'];
       self.model['_listenId'] = id;
+      
+      //TODO: create an ID for the websocket client to use, model it, store it in redis, THEN render the room
       
       self.render("room");
     });
