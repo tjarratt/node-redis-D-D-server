@@ -12,7 +12,7 @@ var gh = require('grasshopper');
 
 responses = {
   'idInactiveError' : "This session is not active right now.",
-  'joinSuccess' : "Roll some 20s, broseph. Sick, so sick.",
+  'joinSuccess' : "Let's get ready to roll some dice!",
   "noUserError" : "Client error: no user specified"
 }
 
@@ -36,12 +36,14 @@ gh.get("/join/{id}", function(args) {
     client.rpush(id + "/users", thisUser, function(e, result) {
       //send back a timestamp and id where the user can listen for messages / updates
       var now = new Date();
+      var websocketId = Math.uuid();
       
       self.model['display'] = responses['joinSuccess'];
-      self.model['_listenId'] = id;
+      self.model['listenId'] = id;
+      self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
+      self.model['websocketId'] = websocketId;
       
       //TODO: create an ID for the websocket client to use, model it, store it in redis, THEN render the room
-      
       self.render("room");
     });
   });

@@ -30,7 +30,10 @@
 <div>
 	<script src="/lib/room.js" language="javascript"></script>
 	<script language="javascript">
-		_listenId = "<%=_listenId%>";
+		_listenId = "<%= listenId%>";
+		_websocketId = "<%= websocketId %>";
+		_default = "<%= useDefault %>";
+		
 		$(document).ready(initRoom);
 	</script>
 	<style>

@@ -93,8 +93,8 @@ var StartSocket = function() {
       		  if (e) {return false;} 
       		  
       		  client.broadcastTo(json(msg), updatedWhiteList);
-      		}
-      	});
+      		});
+    		});
 
       	client.on('disconnect', function(){
       		client.broadcastTo(json({ announcement: client.sessionId + ' disconnected' }));
@@ -112,7 +112,7 @@ var tryStart = function() {
   if (gh.server == null) {
     sys.log("gh not started yet, waiting for nextTick to start socket server.");
     
-    //would probably be more effective to just listen for an event that GH emits when it's done starting up
+    //would probably be more effective to just listen for an event that GH could emit when it's done starting up
     return process.nextTick(tryStart);
   }
   StartSocket();
