@@ -2,7 +2,8 @@ var sys = require('sys');
 
 var errorHandler = require("./util/err"); 
 var gh = require('grasshopper');
-var io = require('socket.io');
+var io = require("socket.io");
+//var io = require('../Socket.IO-node/index');
 
 var util = require('./util/util');
 var json = JSON.stringify;
@@ -40,72 +41,177 @@ gh.get("/", function() {
 gh.serve(8080);
 sys.puts("Server running on port 8080");
 
+//clean up anything from the last session
+//TODO: mark all dnd sessions as inactive
+sys.puts("cleaning up old users");
+redisClient.keys("users:*", function(e, oldUsers) {
+  var oldUsers = oldUsers? oldUsers.toString().split(",") : [];
+  
+  _.each(oldUsers, function(oldUser, index) {
+    sys.puts("removing key[" + oldUser + "]");
+    redisClient.del(oldUser, function(e, result) {});
+  });
+  sys.puts("deleting all old sockets");
+  redisClient.del("sockets", function(e, result) {});
+  
+  //reset all active rooms too
+  redisClient.keys("*/users", function(e, userLists) {
+    sys.puts("deleting old lists of users in active sessions");
+    var userLists = userLists? userLists.toString().split(",") : [];
+    
+    _.each(userLists, function(sessionListKey, index) {
+      redisClient.del(sessionListKey, function(e, result) {});
+    });
+  });
+});
+
 //initialize socket.io : I choose you!
 var buffer = [], json = JSON.stringify;
-
 var StartSocket = function() {
   sys.puts("starting up socket.io");
   //exported http.server from grasshopper
   var socket = io.listen(gh.server);
   
+  //on connection, send out a small buffer, then configure on message handlers
+  /*
+    This is fairly complicated, what we initially expect from a user is their clientID, which we will use internally to identify them
+    overriding the websocket sessionId would require hacking apart the client + server libraries, when I'm not up to yet
+  */
   socket.on('connection', function(client){
   	client.send(json({ buffer: buffer }));
-  	
-  	//may as well keep a hash of users in the SOCKETS space, we may want to store their current position, name in here as well
-  	//simply for the convenience of looking it up based on their websockets clientId
-  	//Might it be easier to simply override the clientsession id with something we know?
-  	//We could tell the client when creating the socket what id to use...
-  	//That technique would be a little less secure though...
-  	
-  	//another concern with storing the user ids this way is that we are duplicating a lot of information - namely the room id, but potentially more
-  	//possibly the number of occupants, or any number of other fields that we may want to access 
-  	redisClient.hget("sockets", client.sessionId, "room", function(e, roomId) {
-  	  //need a way to disconnect the client from here
-  	  if (e) { return false;}
+  	client.on('message', function(message){
+  	  var webSocketId = client.sessionId;
   	  
-  	  //don't particularly want to do this the "RIGHT" way - ie: call redisClient.llen and then call lrange from within its success callback
-  	  //perhaps we should restrict rooms to a reasonable number of users ... 10?
-  	  redisClient.lrange(roomId + "/users", 0, 10, function(e, whiteList) {
-  	    //now that we've identified the user and figured out who they can talk to, we can define some message functions
-  	    client.broadcastTo(json({ announcement: client.sessionId + ' connected' }), whiteList);
+  	  //may as well keep a hash of websocket ids in the SOCKETS space simply for the convenience of looking it up based on their websockets clientId
+    	return redisClient.hget("sockets", webSocketId, function(e, clientId) {    	  
+    	  sys.puts("WEBSOCKET START");
+    	  sys.puts("got :" + clientId + " for socketId: " + webSocketId);
+    	  
+    	  if (e || (!clientId || clientId == null)) {//error, or we don't recognize this user
+    	    sys.puts("error on redis, or we don't recognize this user.");
+    	    //inspect message for an id, tell the client to disconnect otherwise
+    	    //we need the ID here to identify them on future requests
+    	    if (message.indexOf("ID:") < 0) {
+    	      sys.puts("could not identify user with message:" + message);
+    	      //TODO: implement a disconnect method
+    	      client.send(json('disconnect'));
+    	      return false;
+    	    }
+    	    //otherwise, grab the id, stash it away in redis for now, until they try to chat again
+    	    var id = message.substring(message.indexOf(":") + 1, message.length);
+    	    sys.puts("setting userID: " + id + " for websocketId:" + webSocketId)
+    	    
+    	    if (!(id || id.length > 5)) {
+    	      client.send(json('disconnect'));
+    	      return false;
+    	    }
+    	    
+    	    redisClient.hset("sockets", webSocketId, id, function(e, result) {
+    	      sys.puts("set id, getting info for key:" + id);
+    	      if (e || !result) {
+    	        client.send(json('disconnect'));
+    	        return sys.puts("failed to set websocket sessionId - clientId");
+    	      }
+    	      //get whitelist and announce that a user joined
+    	      redisClient.hmget("users:" + id, "name", "room", function(e, info) {
+    	        var name = info[0];
+    	        var roomId = info[1];
+              sys.puts("got info for this client:");
+    	        sys.puts("name: " + name + ", room: " + roomId);
+    	        
+    	        redisClient.lrange(roomId + "/users", 0, 10, function(e, whiteList) {
+    	          //now that we've identified the user, their name + room, we can announce they joined
+    	          whiteList = whiteList? whiteList.toString().split(",") : [];
 
-      	client.on('message', function(message){
-      		var msg = { message: [client.sessionId, message] };
+    	          sys.puts("announcing user: " + name + " joined to " + whiteList);    	          
+          	    client.broadcastOnly(json({ announcement: name + ' connected' }), whiteList);
+          	    
+          	    //push ourselves onto this list
+          	    redisClient.rpush(roomId + "/users", webSocketId, function(e, result) {
+          	      if (e || !result) {
+          	        client.send(json('disconnection'));
+          	      }
+          	    });
+    	        });
+    	      });
+    	    });
+  	    }
+  	    else {
+    	    //we have an id for this user, now we need their info         	    
+    	    sys.puts("this clientId: " + clientId + " should be good.");
+    	    redisClient.hmget("users:" + clientId, "name", "room", function(e, userInfo) {
+    	      if (e || !userInfo) {
+    	        sys.puts("error while getting userinfo for sessionId: " + webSocketId + " aka clientId: " + clientId);
+    	        client.send(json('disconnect'));
+    	        return false;
+    	      }
+  	      
+    	      sys.puts("got userInfo for client with sessionId: " + clientId + " userinfo: " + userInfo);
+  	      
+    	      var name = userInfo[0];
+    	      var roomId = userInfo[1];
+  	      
+    	      //create message, whether it's a movement or message type
+    	      var msg;
+        	  var indexOfMove = message.indexOf("_move_");
+        	  if (indexOfMove >= 0) {
+        	    msg = {move : [webSocketId, message.substring(message.lastIndexOf("_"), message.length)]}
+        	  }
+        		else {
+        		  msg = { message: [webSocketId, message] }; 
+      		  }
+    		  
+      		  //this buffer currently stores a list of the last 15 messages (mainly for clients that connect midway through a session)
+        		//may want to investigate using it to actually buffer client messages
+        		//we would need to either call process.onNextTick or setTimeOut to use this effectively
+        		//storing it in redis may not be a bad idea either, since actions there can be guaranteed atomic
+        		buffer.push(msg);
+        		if (buffer.length > 15) buffer.shift();
 
-      		//this buffer does nothing currently but store a list of the last 15 messages
-      		//may want to investigate using it to actually buffer client messages
-      		//we would need to either call process.onNextTick or setTimeOut to use this effectively
-      		//storing it in redis may not be a bad idea either, since actions there are atomic
-      		buffer.push(msg);
-      		if (buffer.length > 15) buffer.shift();
+        		//ARGH, socket.io only supports blacklists by default
+        		/*
+              Updated my socket.io fork on accept a whitelist on the broadcastOnly method,
+              since we have looked up their roomId, we can easily get a list of users in the room
+        		*/
 
-      		//ARGH, socket.io only supports blacklists by default
-      		/*
-            Updated my socket.io fork on accept a whitelist on the broadcastTo method,
-            What we should do now is either:
-              require the user specify the room in their message (hmmmmm, probably not a good idea)
-              or 
-              lookup which room this user is in, which we should have in redis, then remove the user from that list and broadcoast via the whitelist
-      		*/
-      		
-      		//time has passed since the client joined lowly roomId in a rousing game of XYZ, now we need to look up the current whitelist and send this message back
-      		redisClient.lrange(roomId + "/users", 0, 10, function(e, updatedWhiteList) {
-      		  if (e) {return false;} 
-      		  
-      		  client.broadcastTo(json(msg), updatedWhiteList);
-      		});
-    		});
+        		//time has passed since the client joined lowly roomId in a rousing game of XYZ, 
+        		//now we need to look up the current whitelist and send this message back
+        		redisClient.lrange(roomId + "/users", 0, 10, function(e, updatedWhiteList) {
+        		  if (e) {return false;} 
 
-      	client.on('disconnect', function(){
-      		client.broadcastTo(json({ announcement: client.sessionId + ' disconnected' }));
-      	});
-  	    
-  	  });
-  	  
-  	});
-  	
-	});
-  
+        		  //TODO: remove self from updatedWhiteList
+        		  updatedWhiteList = updatedWhiteList? updatedWhiteList.toString().split(",") : [];
+        		  sys.puts("got whitelist for this user. Going to send a message to: " + updatedWhiteList);
+        		  util.inspect(updatedWhiteList);
+
+        		  client.broadcastOnly(json(msg), updatedWhiteList);
+        		});
+    	    });            
+  	    }
+	    });
+		});
+
+  	client.on('disconnect', function(){
+  	  redisClient.hget("sockets", client.sessionId, function(e, userId) {
+  	    redisClient.hmget("users:" + userId, "name", "room", function(e, userInfo) {
+  	      if (!userInfo || userInfo.length < 2) {
+  	        return false;
+  	      }
+  	      
+  	      var name = userInfo[0];
+  	      var roomId = userInfo[1];
+  	      redisClient.lrange(roomId + "/users", 0, 10, function(e, whiteList) {
+  	        whiteList = whiteList? whiteList.toString().split(",") : [];
+  	        
+  	        client.broadcastOnly(json({ announcement: + name + ' has dddddisconnected' }), whiteList);
+  	          //remove this user from any lists of users
+        		  redisClient.hdel("socket:" + client.sessionId, "room", function(e, result){});
+        		  //TODO: remove from list (roomId + "/users")
+      	  });
+	      });
+	    });
+    });
+  });
 }
 
 var tryStart = function() {
