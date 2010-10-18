@@ -19,13 +19,9 @@
 </div>
 <div id="players">
 	<h3>Players</h3>
-	<img class="player" src="/res/img/Tokens.png"  />
-	<img class="player" src="/res/img/Tokens1.png" />
-	<img class="player" src="/res/img/Tokens2.png" />
-	<!--<img class="player" src="/res/img/Tokens3.png" />
-	<img class="player" src="/res/img/Tokens4.png" />
-	<img class="player" src="/res/img/Tokens5.png" />
-	<img class="player" src="/res/img/Tokens6.png" />-->
+	<% players.forEach(function(player) { %>
+		<img src="<%= player.src %>" id="player#<%= player.name %>">
+	<% }); %>
 </div>
 <div>
 	<script src="/lib/room.js" language="javascript"></script>
@@ -33,6 +29,7 @@
 		_listenId = "<%= listenId%>";
 		_websocketId = "<%= websocketId %>";
 		_default = "<%= useDefault %>";
+		_image = "<%= imageName %>";
 		
 		$(document).ready(initRoom);
 	</script>
