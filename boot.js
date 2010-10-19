@@ -10,6 +10,30 @@ var json = JSON.stringify;
 
 var redisClient = require("./lib/redis-client").createClient();
 
+//clean up anything from before we last shut down
+//TODO: mark all dnd sessions as inactive
+sys.puts("cleaning up old users");
+redisClient.keys("users:*", function(e, oldUsers) {
+  var oldUsers = oldUsers? oldUsers.toString().split(",") : [];
+  
+  _.each(oldUsers, function(oldUser, index) {
+    sys.puts("removing key[" + oldUser + "]");
+    redisClient.del(oldUser, function(e, result) {});
+  });
+  sys.puts("deleting all old sockets");
+  redisClient.del("sockets", function(e, result) {});
+  
+  //reset all active rooms too
+  redisClient.keys("*/users", function(e, userLists) {
+    sys.puts("deleting old lists of users in active sessions");
+    var userLists = userLists? userLists.toString().split(",") : [];
+    
+    _.each(userLists, function(sessionListKey, index) {
+      redisClient.del(sessionListKey, function(e, result) {});
+    });
+  });
+});
+
 gh.configure({
     viewsDir: './app/views',
     layout: './app/views/layout',
@@ -35,35 +59,13 @@ gh.get("/", function() {
   var now = new Date();
 
   this.model['now'] = now;
+  this.model['message'] = "";
+  
   this.render('home');
 });
      
 gh.serve(8080);
 sys.puts("Server running on port 8080");
-
-//clean up anything from the last session
-//TODO: mark all dnd sessions as inactive
-sys.puts("cleaning up old users");
-redisClient.keys("users:*", function(e, oldUsers) {
-  var oldUsers = oldUsers? oldUsers.toString().split(",") : [];
-  
-  _.each(oldUsers, function(oldUser, index) {
-    sys.puts("removing key[" + oldUser + "]");
-    redisClient.del(oldUser, function(e, result) {});
-  });
-  sys.puts("deleting all old sockets");
-  redisClient.del("sockets", function(e, result) {});
-  
-  //reset all active rooms too
-  redisClient.keys("*/users", function(e, userLists) {
-    sys.puts("deleting old lists of users in active sessions");
-    var userLists = userLists? userLists.toString().split(",") : [];
-    
-    _.each(userLists, function(sessionListKey, index) {
-      redisClient.del(sessionListKey, function(e, result) {});
-    });
-  });
-});
 
 //initialize socket.io : I choose you!
 var buffer = [], json = JSON.stringify;

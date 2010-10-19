@@ -1,15 +1,16 @@
 Have an account? Login below or Register now.
 <div class="clear" style="height 50px;"></div>
 <h2>Login</h2>
+<div class="error">
+	<%= message %>
+</div>
 <div id="loginContainer">
+	<form action="#" onsubmit=>
 	<input id="user" name="user" type="text" />
 	Name    
 	<div class="clear"></div>
 	<input id="pass" name="pass" type="text" />
 	Password
-	<div class="clear"></div>
-	<input id="passConfirm" name="passConfirm" type="text" />
-	Confirm  Password
 	<div class="clear"></div>
 	<input id="submitLogin" value="register" type="submit" />
 </div>
@@ -17,14 +18,17 @@ Have an account? Login below or Register now.
 
 <h2>Register</h2>
 <div id="regContainer">
-	<input id="userReg" name="userReg" type="text">
+	<input id="userReg" name="user" type="text">
 	Name
 	<div class="clear"></div>
-	<input id="passReg" name="passReg" type="password">
+	<input id="passReg" name="pass" type="password">
 	Password
 	<div class="clear"></div>
-	<input id="passRegConfirm" name="passRegConfirm" type="password">
+	<input id="passRegConfirm" name="passConfirm" type="password">
 	Confirm  Password	
 	<div class="clear"></div>
 	<input id="submitReg" value="Register" type="submit" />
+</div>
+<div class="scripts">
+	
 </div>
