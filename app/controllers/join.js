@@ -65,6 +65,7 @@ gh.get("/join/{id}", function(args) {
           self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
           self.model['websocketId'] = websocketId;
           self.model['imageName'] = imageName;
+          self.model['userName'] = thisUser;
 
           //get outta here!
           return self.render("room");
@@ -98,6 +99,7 @@ gh.get("/join/{id}", function(args) {
               self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
               self.model['websocketId'] = websocketId;
               self.model['imageName'] = imageName;
+              self.model['userName'] = thisUser;
 
               self.render("room");
             }

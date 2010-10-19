@@ -3,7 +3,8 @@ var sys = require('sys');
 var errorHandler = require("./util/err"); 
 var gh = require('grasshopper');
 var io = require("socket.io");
-//var io = require('../Socket.IO-node/index');
+
+var cookie = require("cookie");
 
 var util = require('./util/util');
 var json = JSON.stringify;
@@ -12,6 +13,7 @@ var redisClient = require("./lib/redis-client").createClient();
 
 //clean up anything from before we last shut down
 //TODO: mark all dnd sessions as inactive
+//TODO: block all the following code on this execution, callllllbaaaaacks
 sys.puts("cleaning up old users");
 redisClient.keys("users:*", function(e, oldUsers) {
   var oldUsers = oldUsers? oldUsers.toString().split(",") : [];

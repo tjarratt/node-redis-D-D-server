@@ -8,6 +8,10 @@ var errorHandler = errors.newHandler();
 
 var gh = require('grasshopper');
 
+//init cookieJar and secret for signed cookies
+var cookie = require("cookie");
+cookie.secret = "thisIsAGoodSecret!";
+
 //possible responses emitted by this object
 exports.responses = {
   'accountStorageError' : {code: 500, message: "An error occurred while processing your request."},
@@ -35,6 +39,9 @@ exports.createAccount = function(username, password, callback) {
 		if (result == false) {
 			client.hset("accounts", username, password, function(err, result) {
 			  //drop cookie, set session info
+			  var res = gh.response;
+			  res.setCookie("")
+			  
 				return callback(exports.responses['accountSuccess']);
 			});
 		}
