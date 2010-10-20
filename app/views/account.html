@@ -1,34 +1,21 @@
-Have an account? Login below or Register now.
-<div class="clear" style="height 50px;"></div>
 <h2>Login</h2>
+<div id="loginContainer">
+	<form name="login" method="POST" action="/account/login">
+		<input id="user" name="user" type="text" />
+		Name    
+		<div class="clear"></div>
+		<input id="pass" name="pass" type="text" />
+		Password
+		<div class="clear"></div>
+		<input id="submitLogin" value="Login" type="submit" />
+</div>
+<div class="clear"></div>
+<div style="margin-top:20px">
+	<span><input type="button" value="Switch" id="logonRegSwitcher" onclick="switchLogonToReg(true); return false;" />No account yet? Need to register?</span>
+</div>
 <div class="error">
 	<%= message %>
 </div>
-<div id="loginContainer">
-	<form action="#" onsubmit=>
-	<input id="user" name="user" type="text" />
-	Name    
-	<div class="clear"></div>
-	<input id="pass" name="pass" type="text" />
-	Password
-	<div class="clear"></div>
-	<input id="submitLogin" value="register" type="submit" />
-</div>
-<div class="clear" style="height50px;"></div>
-
-<h2>Register</h2>
-<div id="regContainer">
-	<input id="userReg" name="user" type="text">
-	Name
-	<div class="clear"></div>
-	<input id="passReg" name="pass" type="password">
-	Password
-	<div class="clear"></div>
-	<input id="passRegConfirm" name="passConfirm" type="password">
-	Confirm  Password	
-	<div class="clear"></div>
-	<input id="submitReg" value="Register" type="submit" />
-</div>
-<div class="scripts">
-	
+<div class="script">
+	<script src="/lib/account.js" language="javascript"></script>
 </div>

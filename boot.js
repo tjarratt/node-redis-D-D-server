@@ -65,6 +65,10 @@ gh.get("/", function() {
   
   this.render('home');
 });
+
+gh.get("/twitter", function() {
+  this.render("twitter");
+});
      
 gh.serve(8080);
 sys.puts("Server running on port 8080");

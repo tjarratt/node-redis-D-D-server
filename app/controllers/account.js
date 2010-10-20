@@ -4,6 +4,7 @@ var sys = require('sys');
 //switching to node_redis, since node-redis-client doesn't support newer node required for NPM goodness
 var client = require("redis").createClient();
 var errors = require('../../util/err');
+var util = require('../../util/util');
 var errorHandler = errors.newHandler();
 
 var gh = require('grasshopper');
@@ -39,12 +40,17 @@ exports.createAccount = function(username, password, callback) {
 		if (result == false) {
 			client.hset("accounts", username, password, function(err, result) {
 			  //drop cookie, set session info
-			  var res = gh.response;
-			  res.setCookie("")
+			  var newUID = Math.uuid();
 			  
-				return callback(exports.responses['accountSuccess']);
-			});
-		}
+			  client.hset("cookie:" + newUID, username, function(e, result) {
+			    var res = gh.response;
+  			  res.setCookie("uname", username);
+  			  res.setCookie("uid", newUID);
+			  
+  				return callback(exports.responses['accountSuccess']);
+			  });
+		  });
+	  }
 		
 		else {
 			callback(exports.responses['accountExistsError']);
@@ -54,24 +60,40 @@ exports.createAccount = function(username, password, callback) {
 }
 
 exports.Login = function(username, password, callback) {
+  sys.puts("in login for: " + username);
+  
   if (errors.isEmpty([username, password])) {
     callback(exports.responses['accountInputFailure']);
     return;
   }
   
   client.hexists("accounts", username, function(e, result) {
+    sys.puts("result: " + result)
+    util.inspect(result);
+    
     if (result == false) {
+      sys.puts("no account with name: " + username);
       return callback(exports.responses['accountNotExists']);
     }
     else {
       client.hget("accounts", username, function(e, realPassword) {
+        sys.puts("got password for " + username);
         //basic auth is basic
         if (realPassword != password) {
+          sys.puts("bad password.");
           return callback(exports.responses['passwordMismatchFailure']);
         }
         else {
           //drop cookie, set session info
-          callback({name: "dude"});
+          sys.puts("auth successful");
+          var newUID = Math.uuid();
+
+  			  client.hset("cookie:" + newUID, username, function(e, result) {
+  			    var res = gh.response;
+    			  res.setCookie("uname", username);
+    			  res.setCookie("uid", newUID);
+            callback({name: "dude"});
+          });
         }
       });
     }
@@ -85,12 +107,17 @@ gh.get("/account", function() {
 
 gh.post("/account/{action}", function(args) {
   var action = args.action;
+  sys.puts(action);
+  
   if (!action || (action != "register" && action != "login")) {
     return this.renderText("Unknown action when POSTing to /account/: " + action + ". Probably shouldn't try that again.");
   }
   
   var username = this.params['user'];
   var password = this.params['pass'];
+  
+  //what the fuck, why are these getting formatted with a comma at the end?
+  
   var self = this;
   if (errors.isEmpty([username, password, self])) {
     //TODO: render the same view again, with a variable set to display this message
@@ -103,10 +130,13 @@ gh.post("/account/{action}", function(args) {
   }
   
   var authCallback = function(result) {
+    //debugging
     sys.puts("in login callback with : " + result);
+    util.inspect(result);
+    
     if (!result || !result.name) {
       sys.puts("failure in authentication");
-      self.model['errorMessage'] = "Failed to log you in. The hivemind has been notified.";
+      self.model['message'] = "Failed to log you in. The hivemind has been notified.";
       return self.render("account");
     }
     
@@ -125,6 +155,7 @@ gh.post("/account/{action}", function(args) {
   }
   else {
     sys.puts("logging in user: " + username);
+    sys.puts(password);
     return exports.Login(username, password, authCallback)
   }
 });
