@@ -41,19 +41,21 @@ gh.get("/join/{id}", function(args) {
   client.hexists("active", id, function(e, result) {
     if (e || result != true) {return self.renderText(responses['idInactiveError'])}
       
-    sys.puts("setting this info for user with id: " + websocketId);
+    /*sys.puts("setting this info for user with id: " + websocketId);
     sys.puts("name: " + thisUser);
     sys.puts("room: " + id);
+    
+    sys.puts("setting websocket info for " + thisUser);*/
     
     //the sockets hash will hold all current users by websocketId, and a reference to the room they are currently in 
     client.hmset("users:" + websocketId, "room", id, "name", thisUser, "defaultImage", imageName, function(e, result) {
       if (e || !result) {return self.renderText(responses['dbError'])}
       
-      sys.puts("getting a list of existing users...");
+      //sys.puts("getting a list of existing users...");
       //get a list of the existing usernames + images
       client.lrange(id + "/users", 0, 10, function(e, users) {
         users = users? users.toString().split(",") : [];
-        var totalUsers = users.length;
+        totalUsers = users.length;
         var thisPlayer = {name: thisUser, src: "/res/img/" + imageName + ".png"}
         
         var players = [thisPlayer]
@@ -72,27 +74,49 @@ gh.get("/join/{id}", function(args) {
         }
         
         //in most browsers it should be safe to do this, but we might also consider storing this count in redis, since operations there can be atomic
-        _.each(users, function(userId, index) {
+        _.each(users, function(socketid, index) {
           //get info from redis
-          client.hmget("users: " + userId, "name", "defaultImage", function(e, result) {
-            result = result? result.toString().split(",") : [];
+          client.hget("sockets", socketid, function(e, userId) {
             
-            totalUsers--;
+            /*//debug statement from when we couldn't get valid user info back via hmgets
+            client.keys("users:*", function(e, result) {
+              sys.puts("got these users:* keys: " + result);
+              var firstKey = result.toString().split(",")[0];
+              client.hget(firstKey, "name", function(e, result) {
+                sys.puts("hget " + firstKey + " : " + result);
+              });
+            });*/
             
-            if ((e || !result || result.length < 2) && totalUsers > 0) {
-              return;
+            var fetchThisUser = function(userId) {
+              client.hmget("users:" + userId, "name", "defaultImage", function(e, result) {
+                
+                result = result? result.toString().split(",") : [];
+                var userName = result[0];
+                var imageSrc = result[1];
+                
+                if (e || !result || result.length < 2 || (!userName || !imageSrc)) {
+                  sys.puts("got no result for hmget users:" + userId + " will attempt on next process tick.");
+                  return process.nextTick(fetchThisUser(userId));
+                }
+
+                totalUsers--;
+
+                //that is kind of a weird way to fail
+                userName = userName? userName.toString('utf8') : "some user";
+                imageSrc = imageSrc? "/res/img/" + imageSrc.toString('utf8') + ".png" : "/res/img/Tokens.png";
+                
+                sys.puts("identified : " + userName + " with image: " + imageSrc + " " + totalUsers + " remaining to lookup.");
+
+                var thisPlayer = {name: userName, src: imageSrc};
+                players.push(thisPlayer);
+                
+                if (totalUsers <= 0) {
+                  return renderRoomWithPlayers(players);
+                
+                };
+              });
             }
-            
-            var userName = result[0];
-            var imageSrc = result[1];
-            
-            userName = userName? userName.toString('utf8') : "some user";
-            imageSrc = imageSrc? "/res/img/" + imageSrc.toString('utf8') + ".png" : "/res/img/Tokens.png";
-
-            var thisPlayer = {name: userName, src: imageSrc};
-            players.push(thisPlayer);
-
-            if (totalUsers <= 0) {
+            var renderRoomWithPlayers = function(players) {
               self.model['players'] = players;
               self.model['display'] = responses['joinSuccess'];
               self.model['listenId'] = id;
@@ -103,6 +127,8 @@ gh.get("/join/{id}", function(args) {
 
               self.render("room");
             }
+            
+            fetchThisUser(userId);
           });
         });
       });

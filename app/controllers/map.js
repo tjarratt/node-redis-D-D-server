@@ -27,7 +27,7 @@ gh.get("/maps/{id}", function(args) {
     util.inspect(result);
     
     _.each(result, function(name, mapKey, list) {
-      sys.puts("Looking for map with key: " + mapKey);
+      sys.puts("Looking at map with key: " + mapKey);
       client.hmget(mapKey, "name", "width", "height", function(e, thisMap) {
         var map = {name: thisMap[0].toString('utf8'),
                   width: thisMap[1].toString('utf8'),
