@@ -9,6 +9,7 @@ var errors = require('../../util/err');
 require("../../lib/underscore-min")
 
 var gh = require('grasshopper');
+var cookie = require('cookie');
 
 responses = {
   'idInactiveError' : "This session is not active right now.",
@@ -20,119 +21,109 @@ responses = {
 gh.get("/join/{id}", function(args) {
   var self = this;
   var id = args.id;
-                                    
-  //actually, should be reading this from a cookie : too busy to implement yet
-  if (!this.params) {
-    return this.renderText(responses['noUserError']);
-  }
   
   //TODO: don't let more than 10 people join a table
   
-  //TODO: replace these with session vars
-  var thisUser = this.params['user'];
-  var imageName = this.params['image'];
-  
+  //get the ID for their session variables
+  var sessionId = gh.request.getCookie("uid");  
   var now = new Date();
-  var websocketId = Math.uuid();
   
-  if (errors.isEmpty([thisUser, id, imageName])) {return self.renderText(responses['noUserError'])}
+  sys.puts("user with cookie:" + sessionId + " attempting to join room:" + id);
   
-  //make sure this is an existing, active session
-  client.hexists("active", id, function(e, result) {
-    if (e || result != true) {return self.renderText(responses['idInactiveError'])}
-      
-    /*sys.puts("setting this info for user with id: " + websocketId);
-    sys.puts("name: " + thisUser);
-    sys.puts("room: " + id);
+  //get user session data
+  client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
+    if (e || !result || !result.length || result.length < 1 || result[0] == null) {
+      return self.renderText("Have you ever been authenticated?");
+    }
+    var thisUser = result[0].toString('utf8');
+    var imageName = result[1]? result[1].toString('utf8') : "Tokens";
+  
+    if (errors.isEmpty([thisUser, id, imageName])) {return self.renderText(responses['noUserError'])}
+  
+    //make sure this is an existing, active session
+    client.hexists("active", id, function(e, result) {
+      if (e || result != true) {return self.renderText(responses['idInactiveError'])}
     
-    sys.puts("setting websocket info for " + thisUser);*/
-    
-    //the sockets hash will hold all current users by websocketId, and a reference to the room they are currently in 
-    client.hmset("users:" + websocketId, "room", id, "name", thisUser, "defaultImage", imageName, function(e, result) {
-      if (e || !result) {return self.renderText(responses['dbError'])}
+      //the sockets hash will hold all current users by websocketId, and a reference to the room they are currently in 
+      client.hmset("users:" + sessionId, "room", id, "name", thisUser, "defaultImage", imageName, function(e, result) {
+        if (e || !result) {return self.renderText(responses['dbError'])}
       
-      //sys.puts("getting a list of existing users...");
-      //get a list of the existing usernames + images
-      client.lrange(id + "/users", 0, 10, function(e, users) {
-        users = users? users.toString().split(",") : [];
-        totalUsers = users.length;
-        var thisPlayer = {name: thisUser, src: "/res/img/" + imageName + ".png"}
+        //sys.puts("getting a list of existing users...");
+        //get a list of the existing usernames + images
+        client.lrange(id + "/users", 0, 10, function(e, users) {
+          users = users? users.toString().split(",") : [];
+          totalUsers = users.length;
+          var thisPlayer = {name: thisUser, src: "/res/img/" + imageName + ".png"}
         
-        var players = [thisPlayer]
+          var players = [thisPlayer]
         
-        if (users.length <= 0) {
-          self.model['players'] = players;
-          self.model['display'] = responses['joinSuccess'];
-          self.model['listenId'] = id;
-          self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
-          self.model['websocketId'] = websocketId;
-          self.model['imageName'] = imageName;
-          self.model['userName'] = thisUser;
+          if (users.length <= 0) {
+            self.model['players'] = players;
+            self.model['display'] = responses['joinSuccess'];
+            self.model['listenId'] = id;
+            self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
+            self.model['websocketId'] = sessionId;
+            self.model['imageName'] = imageName;
+            self.model['userName'] = thisUser;
+            self.model['url'] = "butter3.local";
 
-          //get outta here!
-          return self.render("room");
-        }
+            //get outta here!
+            return self.render("room");
+          }
         
-        //in most browsers it should be safe to do this, but we might also consider storing this count in redis, since operations there can be atomic
-        _.each(users, function(socketid, index) {
-          //get info from redis
-          client.hget("sockets", socketid, function(e, userId) {
+          //in most browsers it should be safe to do this, but we might also consider storing this count in redis, since operations there can be atomic
+          _.each(users, function(socketid, index) {
+            //get info from redis
+            client.hget("sockets", socketid, function(e, userId) {
             
-            /*//debug statement from when we couldn't get valid user info back via hmgets
-            client.keys("users:*", function(e, result) {
-              sys.puts("got these users:* keys: " + result);
-              var firstKey = result.toString().split(",")[0];
-              client.hget(firstKey, "name", function(e, result) {
-                sys.puts("hget " + firstKey + " : " + result);
-              });
-            });*/
+              var fetchThisUser = function(userId) {
+                client.hmget("users:" + userId, "name", "defaultImage", function(e, result) {
+                
+                  result = result? result.toString().split(",") : [];
+                  var userName = result[0];
+                  var imageSrc = result[1];
+                
+                  if (e || !result || result.length < 2 || (!userName || !imageSrc)) {
+                    sys.puts("got no result for hmget users:" + userId + " will attempt on next process tick.");
+                    return process.nextTick(fetchThisUser(userId));
+                  }
+
+                  totalUsers--;
+
+                  //that is kind of a weird way to fail
+                  userName = userName? userName.toString('utf8') : "some user";
+                  imageSrc = imageSrc? "/res/img/" + imageSrc.toString('utf8') + ".png" : "/res/img/Tokens.png";
+                
+                  sys.puts("identified : " + userName + " with image: " + imageSrc + " " + totalUsers + " remaining to lookup.");
+
+                  var thisPlayer = {name: userName, src: imageSrc};
+                  players.push(thisPlayer);
+                
+                  if (totalUsers <= 0) {
+                    return renderRoomWithPlayers(players);
+                
+                  };
+                });
+              }
+              var renderRoomWithPlayers = function(players) {
+                self.model['players'] = players;
+                self.model['display'] = responses['joinSuccess'];
+                self.model['listenId'] = id;
+                self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
+                self.model['websocketId'] = sessionId;
+                self.model['imageName'] = imageName;
+                self.model['userName'] = thisUser;
+                self.model['url'] = "butter3.local";
+
+                self.render("room");
+              }
             
-            var fetchThisUser = function(userId) {
-              client.hmget("users:" + userId, "name", "defaultImage", function(e, result) {
-                
-                result = result? result.toString().split(",") : [];
-                var userName = result[0];
-                var imageSrc = result[1];
-                
-                if (e || !result || result.length < 2 || (!userName || !imageSrc)) {
-                  sys.puts("got no result for hmget users:" + userId + " will attempt on next process tick.");
-                  return process.nextTick(fetchThisUser(userId));
-                }
-
-                totalUsers--;
-
-                //that is kind of a weird way to fail
-                userName = userName? userName.toString('utf8') : "some user";
-                imageSrc = imageSrc? "/res/img/" + imageSrc.toString('utf8') + ".png" : "/res/img/Tokens.png";
-                
-                sys.puts("identified : " + userName + " with image: " + imageSrc + " " + totalUsers + " remaining to lookup.");
-
-                var thisPlayer = {name: userName, src: imageSrc};
-                players.push(thisPlayer);
-                
-                if (totalUsers <= 0) {
-                  return renderRoomWithPlayers(players);
-                
-                };
-              });
-            }
-            var renderRoomWithPlayers = function(players) {
-              self.model['players'] = players;
-              self.model['display'] = responses['joinSuccess'];
-              self.model['listenId'] = id;
-              self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
-              self.model['websocketId'] = websocketId;
-              self.model['imageName'] = imageName;
-              self.model['userName'] = thisUser;
-
-              self.render("room");
-            }
-            
-            fetchThisUser(userId);
+              fetchThisUser(userId);
+            });
           });
         });
       });
-    });
       
+    });
   });
 });

@@ -13,6 +13,7 @@ var redisClient = require("./lib/redis-client").createClient();
 
 //clean up anything from before we last shut down
 //TODO: mark all dnd sessions as inactive
+//TODO: delete all cookie:* hashes that aren't active
 //TODO: block all the following code on this execution, callllllbaaaaacks
 sys.puts("cleaning up old users");
 redisClient.keys("users:*", function(e, oldUsers) {
@@ -51,7 +52,9 @@ gh.configure({
   "session", 
   "talk", 
   "join",
-  "map"
+  "character",
+  "map",
+  "test"
 ].forEach(function(controller) {
     require("./app/controllers/" + controller);
 });
@@ -165,6 +168,8 @@ var StartSocket = function() {
     	      var name = userInfo[0].toString('utf8');
     	      var roomId = userInfo[1].toString('utf8');
     	      var websocketId = websocketId? websocketId : client.sessionId;
+    	      
+    	      var sendToSelf = false;
   	      
     	      //create message, whether it's a movement or message type
     	      var msg;
@@ -173,8 +178,14 @@ var StartSocket = function() {
         	    sys.puts("creating a move message");
         	    msg = {move : [name, message.substring(message.lastIndexOf("_"), message.length)]}
         	  }
+        	  else if (message[0] == "/") {
+        	    var emote = handleEmote(message);
+        	    sys.puts(name + " has emote: " + emote);
+        	    msg = {message: [name, emote] };
+        	    sendToSelf = true;
+        	  }
         		else {
-        		  msg = { message: [name, message] }; 
+        		  msg = {message: [name, message] }; 
       		  }
     		  
       		  //this buffer currently stores a list of the last 15 messages (mainly for clients that connect midway through a session)
@@ -195,9 +206,10 @@ var StartSocket = function() {
         		redisClient.lrange(roomId + "/users", 0, 10, function(e, updatedWhiteList) {
         		  if (e) {return false;} 
 
-        		  //TODO: remove self from updatedWhiteList
+        		  //TODO: remove self from updatedWhiteList, unless we need to display an emote
+        		  //TODO: perhaps we should always be sending messages back to the user that originated it? However simpler, isn't that wasteful?
         		  updatedWhiteList = updatedWhiteList? updatedWhiteList.toString().split(",") : [];
-        		  updatedWhiteList = _.without(updatedWhiteList, websocketId);
+        		  if (!sendToSelf) { updatedWhiteList = _.without(updatedWhiteList, websocketId); }
         		  
         		  sys.puts("got whitelist for this user. Going to send a message to: " + updatedWhiteList);
         		  client.broadcastOnly(json(msg), updatedWhiteList);
@@ -226,7 +238,7 @@ var StartSocket = function() {
   	        whiteList = whiteList? whiteList.toString().split(",") : [];
   	        whiteList = _.without(whiteList, websocketId);
   	        
-  	        client.broadcastOnly(json({ announcement: + name + ' has dddddisconnected' }), whiteList);
+  	        client.broadcastOnly(json({ announcement: + ' someone has dddddisconnected' }), whiteList);
   	          //remove this user from any lists of users
         		  redisClient.hdel("socket:" + client.sessionId, "room", function(e, result){});
         		  //remove from list (roomId + "/users")
@@ -236,6 +248,27 @@ var StartSocket = function() {
 	    });
     });
   });
+}
+
+var handleEmote = function(message) {
+  sys.puts("handling emote for message:" + message);
+  
+  var parts = message.split(" ");
+  var len = parts.length;
+  
+  if (parts[0] == "/roll") {
+    var first = len > 1 ? parts[1] : 20;
+    var second = len > 2 ? parts[2] : 1;
+    
+    sys.puts("rolling between " + second + " and " + first);
+    
+    var result = Math.floor(Math.random() * first) + 1;
+    sys.puts("rolls a " + result);
+    
+    //TODO: for now assume that second will always be 1
+    return "rolled a " + result.toString() + " (from " + second.toString() + " to " + first.toString() + ")";
+  }
+  return "waves their hands around in the air, emoting wildly.";
 }
 
 var tryStart = function() {

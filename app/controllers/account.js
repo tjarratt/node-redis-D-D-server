@@ -42,10 +42,12 @@ exports.createAccount = function(username, password, callback) {
 			  //drop cookie, set session info
 			  var newUID = Math.uuid();
 			  
-			  client.hset("cookie:" + newUID, username, function(e, result) {
+			  client.hset("cookie:" + newUID, "username", username, function(e, result) {
 			    var res = gh.response;
-  			  res.setCookie("uname", username);
-  			  res.setCookie("uid", newUID);
+			    
+			    sys.puts("writing uid, uname cookies");
+          res.setCookie("uid", newUID);
+  			  //res.setCookie("uname", username);
 			  
   				return callback(exports.responses['accountSuccess']);
 			  });
@@ -88,11 +90,14 @@ exports.Login = function(username, password, callback) {
           sys.puts("auth successful");
           var newUID = Math.uuid();
 
-  			  client.hset("cookie:" + newUID, username, function(e, result) {
+  			  client.hset("cookie:" + newUID, "username", username, function(e, result) {
   			    var res = gh.response;
-    			  res.setCookie("uname", username);
-    			  res.setCookie("uid", newUID);
-            callback({name: "dude"});
+  			    var options = {path: "/"}
+  			                 
+  			    sys.puts("setting id:" + newUID + " for user:" + username);
+    			  //res.setCookie("uname", username, options);
+    			  res.setCookie("uid", newUID, options);
+            callback({name: username});
           });
         }
       });

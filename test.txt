@@ -1,0 +1,16 @@
+Test:       
+
+AUTHENTICATE
+curl -vd "user=tim&pass=foobar" "127.0.0.1:8080/auth?user=tim&pass=foobar" 
+
+CREATE SESSION
+curl -vd "user=tim&token=1C96DA34-70AA-40DE-B977-357F6EEF90EE&sessionName=test&sharedKey=badSecret&users=200"  "127.0.0.1:8080/create/session?user=tim&token=1C96DA34-70AA-40DE-B977-357F6EEF90EE&sessionName=test&sharedKey=badSecret&users=200"
+
+JOIN SESSION
+curl -vd "user=tim&token=1C96DA34-70AA-40DE-B977-357F6EEF90EE" "127.0.0.1:8080/join/1C96DA34-70AA-40DE-B977-357F6EEF90EE"
+
+SEND MESSAGE
+curl -vd "user=tim&token=1C96DA34-70AA-40DE-B977-357F6EEF90EE&message='hello world'" "127.0.0.1:8080/send/1C96DA34-70AA-40DE-B977-357F6EEF90EE"
+
+UPLOAD FILE?
+curl -vd @/Users/tjarratt/Desktop/stuff/circle2.png --data-binary "127.0.0.1:8080/maps/E39A1157-AE7C-4847-BFE6-DCFDE8C5D314/file?qqfile=circle2.png"
