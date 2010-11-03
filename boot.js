@@ -228,8 +228,8 @@ var StartSocket = function() {
   	        return false;
   	      }
   	      
-  	      var name = userInfo[0].toString('utf8');
-  	      var roomId = userInfo[1].toString('utf8');
+  	      var name = util.hashResultMaybe(userInfo, 0);//userInfo[0].toString('utf8');
+  	      var roomId = util.hashResultMaybe(userInfo, 1);
   	      var websocketId = websocketId ? websocketId : client.sessionId;
   	      
   	      sys.puts(name + " has disconnected from room: " + roomId);

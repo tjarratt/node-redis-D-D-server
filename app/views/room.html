@@ -13,6 +13,7 @@
 			<canvas id="background" width="700" height="700"></canvas>
 			<canvas id="map" width="700" height="700"></canvas>
 			<canvas id="top" width="700" height="700"></canvas>
+			<canvas id="annotations" width="700" height="700"></canvas>
 			<textarea id="textArea" rows="5" cols="14"></textarea>
 		</div>
 	</div>
@@ -25,6 +26,9 @@
 </div>
 <div>
 	<script src="/lib/room.js" language="javascript"></script>
+	<script src="/lib/base64.js" language="javascript"></script>
+	<script src="/lib/canvas2Image.js" language="javascript"></script>
+	
 	<script language="javascript">
 		_listenId = "<%= listenId%>";
 		_websocketId = "<%= websocketId %>";
