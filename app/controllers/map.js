@@ -117,9 +117,7 @@ gh.post("/maps/{id}/upload", function(args) {
     sys.puts("missing something: " + [id, file]);
     return this.renderText("Missing some data. " + [id, file]);
   }
-                
-  //sanity check on mimetype : this is not guaranteed to work. We should also check the filetype if possible
-  
+    
   var mapId = Math.uuid();
   var newName = "/nodeUploads/" + mapId;
   sys.puts("created map at path: " + newName);
@@ -129,6 +127,8 @@ gh.post("/maps/{id}/upload", function(args) {
       return sys.puts('exec error: ' + error);
     }
     sys.puts("copied over file to more permanent filesystem");
+    sys.puts("stdout:" + stdout);
+    sys.puts("stderr:" + stderr);
     
     client.hmset(id, mapId + "mapPath", newName, function(e, result) {
       //need to check if we actually can write to redis -- might want to kill that image otherwise

@@ -76,9 +76,9 @@
 	                        if(data.error != "") {
 	                            alert(data.error);
 	                        }
-							else {
-	                            alert(data.msg);
-	                        }
+													else {
+		                          alert(data.msg);
+		                      }
 	                    }
 	                },
 	                error: function (data, status, e) {
@@ -87,7 +87,7 @@
             });
 	        return false;
 		}
-		
+		//TOOD: can probably remove this
 		onUpload = function(context) {
 			//context of this should be the save input element
 			//ideally we could listen for a "chose file" event rather than using ANOTHER input element
@@ -126,6 +126,7 @@
 			xhr.send(body); // Less Simple...
 		}
 
+		//get existing maps
 		$.ajax({
 			async: true,
 			url: "/maps/" + id,
@@ -170,6 +171,7 @@
 				errorCallback(err);
 			}
 		});
+		//TODO: can probably remove this function
 		var uploadMap = function() {
 			var data = {
 				id: $("div.editId").attr("id"),

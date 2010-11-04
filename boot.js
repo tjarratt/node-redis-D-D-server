@@ -54,7 +54,8 @@ gh.configure({
   "join",
   "character",
   "map",
-  "test"
+  "test",
+  "annotate"
 ].forEach(function(controller) {
     require("./app/controllers/" + controller);
 });
