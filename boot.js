@@ -179,6 +179,11 @@ var StartSocket = function() {
         	    sys.puts("creating a move message");
         	    msg = {move : [name, message.substring(message.lastIndexOf("_"), message.length)]}
         	  }
+        	  else if (message.indexOf("_update") >= 0) {
+        	    var itemToUpdate = message.substring(message.lastIndexOf("_"), message.lenth);
+        	    sys.puts("received update for :" + itemToUpdate);
+        	    msg = {annotate: [name, itemToUpdate]};
+        	  }
         	  else if (message[0] == "/") {
         	    var emote = handleEmote(message);
         	    sys.puts(name + " has emote: " + emote);
