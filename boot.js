@@ -171,6 +171,8 @@ var StartSocket = function() {
     	      var websocketId = websocketId? websocketId : client.sessionId;
     	      
     	      var sendToSelf = false;
+    	      var bufferMsgToReplace = false;
+    	      var bufferType = false;
   	      
     	      //create message, whether it's a movement or message type
     	      var msg;
@@ -178,11 +180,14 @@ var StartSocket = function() {
         	  if (indexOfMove >= 0) {
         	    sys.puts("creating a move message");
         	    msg = {move : [name, message.substring(message.lastIndexOf("_"), message.length)]}
+        	    //TODO: find a way to replace the last move message for this user
         	  }
         	  else if (message.indexOf("_update") >= 0) {
         	    var itemToUpdate = message.substring(message.lastIndexOf("_"), message.lenth);
         	    sys.puts("received update for :" + itemToUpdate);
-        	    msg = {annotate: [name, itemToUpdate]};
+        	    msg = {update: [name, itemToUpdate]};
+        	    bufferMsgToReplace = itemToUpdate;
+        	    bufferType = "update";
         	  }
         	  else if (message[0] == "/") {
         	    var emote = handleEmote(message);
@@ -193,13 +198,30 @@ var StartSocket = function() {
         		else {
         		  msg = {message: [name, message] }; 
       		  }
-    		  
-      		  //this buffer currently stores a list of the last 15 messages (mainly for clients that connect midway through a session)
-        		//may want to investigate using it to actually buffer client messages
-        		//we would need to either call process.onNextTick or setTimeOut to use this effectively
-        		//storing it in redis may not be a bad idea either, since actions there can be guaranteed atomic
-        		buffer.push(msg);
-        		if (buffer.length > 15) buffer.shift();
+    		    
+    		    if (bufferMsgToReplace) {
+    		      var didReplace = false;
+    		      _.each(buffer, function(bufferMsg, index) { 
+    		        if (typeof bufferMsg[bufferType] != "undefined" && bufferMsg[bufferType][1] == bufferMsgToReplace) {
+    		          didReplace = true;
+    		          buffer[index] = msg;
+    		          return false;//exit .each loop
+    		        }
+    		      });
+    		      if (!didReplace) {
+    		        sys.puts("error while replacing a message of type: " + bufferType);
+    		        buffer.push(msg);
+    		        if (buffer.length > 15) buffer.shift();
+    		      } 
+    		    }
+    		    else {
+      		    //this buffer currently stores a list of the last 15 messages (mainly for clients that connect midway through a session)
+          		//may want to investigate using it to actually buffer client messages
+          		//we would need to either call process.onNextTick or setTimeOut to use this effectively
+          		//storing it in redis may not be a bad idea either, since actions there can be guaranteed atomic
+          		buffer.push(msg);
+          		if (buffer.length > 15) buffer.shift();
+        		}
 
         		//ARGH, socket.io only supports blacklists by default
         		/*
