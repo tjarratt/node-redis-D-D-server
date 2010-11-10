@@ -55,7 +55,7 @@ gh.configure({
   "character",
   "map",
   "test",
-  "annotate"
+  "update"
 ].forEach(function(controller) {
     require("./app/controllers/" + controller);
 });
@@ -183,9 +183,10 @@ var StartSocket = function() {
         	    //TODO: find a way to replace the last move message for this user
         	  }
         	  else if (message.indexOf("_update") >= 0) {
-        	    var itemToUpdate = message.substring(message.lastIndexOf("_"), message.lenth);
+        	    var itemToUpdate = message.substring(message.lastIndexOf(":") + 1, message.lenth);
         	    sys.puts("received update for :" + itemToUpdate);
-        	    msg = {update: [name, itemToUpdate]};
+        	    msg = {};
+        	    msg[itemToUpdate] = [name, true];
         	    bufferMsgToReplace = itemToUpdate;
         	    bufferType = "update";
         	  }
