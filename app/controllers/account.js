@@ -134,11 +134,7 @@ gh.post("/account/{action}", function(args) {
     self.renderText(result.message);
   }
   
-  var authCallback = function(result) {
-    //debugging
-    sys.puts("in login callback with : " + result);
-    util.inspect(result);
-    
+  var authCallback = function(result) {   
     if (!result || !result.name) {
       sys.puts("failure in authentication");
       self.model['message'] = "Failed to log you in. The hivemind has been notified.";
