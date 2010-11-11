@@ -6,6 +6,8 @@ require("../../lib/uuid");
 var errors = require('../../util/err');
 require("../../lib/underscore-min");
 
+var exec = require('child_process').exec;//shell scripts woo
+
 var gh = require("grasshopper");
 
 gh.post("/update/{roomId}/annotate", function(args) {
@@ -49,6 +51,24 @@ gh.post("/update/{roomId}/annotate", function(args) {
   }
   //return the client some info so they can tell other clients where to get this image from
   return this.renderText("true");
+});
+
+gh.post("/update/{roomId}/annotate/delete", function(args) {
+  var self = this,
+      roomId = args.roomId;
+  sys.puts("deleting the annotation image for room: " + roomId);
+  //copy an empty image to the location on disk where we normally have this
+  //for now everything is a 700 by 700 image so let's use what we got
+  var fileBase = __dirname + "/../../res/img/";
+  
+  exec('cp ' + fileBase + "empty_700_700.png " + fileBase + roomId + ".png", function(error, stdout, stderr) {
+    if (error !== null) {
+      sys.puts('exec error while deleting annotation image: ' + error);
+      
+      return self.renderText("false");
+    }
+    self.renderText("true");
+  });
 });
 
 gh.post("/update/{roomId}/shadow", function(args) {

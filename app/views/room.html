@@ -20,6 +20,13 @@
 		</div>
 	</div>
 </div>
+<div id="dmPalette">
+	<h3>Tools</h3>
+	<input type="button" id="tool_annotate" src="/res/img/palette/annotate.png"/>
+	<input type="button" id="tool_shadow" src="/res/img/palette/shadow.png"/>
+	<input type="button" id="tool_erase" src="/res/img/palette/erase.png"/>
+	<input type="button" id="tool_wipe" src="/res/img/palette/wipe.png" />
+</div>
 <div id="players">
 	<h3>Players</h3>
 	<% players.forEach(function(player) { %>
@@ -38,13 +45,14 @@
 		_image = "<%= imageName %>";
 		_userName = "<%= userName %>";
 		_url = "<%= url %>";
+		_isDM = "<%= isDM? true : false %>";
 		
 		$(document).ready(initRoom);
 	</script>
 	<style>
 		div#canvasContainer {
 			position: relative;
-			top:-367px;
+			top:-397px;
 			left:-70px;
 			float:right;
 			padding: 10;
@@ -68,6 +76,26 @@
 		}
 		input#text {
 			width: 400px!important;
+		}
+		input#tool_annotate {
+			background:url(/res/img/palette/annotate.png) no-repeat;
+			width: 30px;
+			height: 30px;
+		}
+		input#tool_shadow {
+			background:url(/res/img/palette/shadow.png) no-repeat;
+			width: 30px;
+			height: 30px;
+		}
+		input#tool_wipe {
+			background:url(/res/img/palette/wipe.png) no-repeat;
+			width: 30px;
+			height: 30px;
+		}
+		input#tool_erase {
+			background:url(/res/img/palette/erase.png) no-repeat;
+			width: 30px;
+			height: 30px;
 		}
 	</style>
 </div>

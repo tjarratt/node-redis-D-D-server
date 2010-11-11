@@ -66,6 +66,7 @@ gh.get("/join/{id}", function(args) {
             self.model['imageName'] = imageName;
             self.model['userName'] = thisUser;
             self.model['url'] = "butter3.local";
+            self.model['isDM'] = true;
 
             //get outta here!
             return self.render("room");
@@ -114,6 +115,7 @@ gh.get("/join/{id}", function(args) {
                 self.model['imageName'] = imageName;
                 self.model['userName'] = thisUser;
                 self.model['url'] = "butter3.local";
+                self.model['isDM'] = false;
 
                 self.render("room");
               }
