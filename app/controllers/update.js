@@ -56,12 +56,17 @@ gh.post("/update/{roomId}/annotate", function(args) {
 gh.post("/update/{roomId}/annotate/delete", function(args) {
   var self = this,
       roomId = args.roomId;
+      
+  //roomId came from an untrusted source, need to clean it up
+  roomId = roomId.replace(/[~`!@#$%^&*()_+=":';?\/\\>.<,]/g, "");
   sys.puts("deleting the annotation image for room: " + roomId);
+  
   //copy an empty image to the location on disk where we normally have this
   //for now everything is a 700 by 700 image so let's use what we got
-  var fileBase = __dirname + "/../../res/img/";
+  var fileBase = __dirname + "/../../res/img/annotate/";
+  var cmd = "cp " + fileBase + "empty_700_700.png " + fileBase + roomId + ".png";
   
-  exec('cp ' + fileBase + "empty_700_700.png " + fileBase + roomId + ".png", function(error, stdout, stderr) {
+  exec(cmd, function(error, stdout, stderr) {
     if (error !== null) {
       sys.puts('exec error while deleting annotation image: ' + error);
       

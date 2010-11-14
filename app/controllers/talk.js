@@ -18,7 +18,7 @@ gh.post("/talk", function(args) {
   }
   
   //hey let's not allow any bad input
-  message = message.replace(/[~`!@#$%^&*()_+-=":';?\/>.<,]/g, "");
+  message = message.replace(/[~`!@#$%^&*()_+-=":';?\/\\>.<,]/g, "");
   if (/^[A-Za-z0-9\s]*$/.test(message) != true) {
     sys.puts("found a message that does not match our regex: " + message);
     message = "Congratulations, you just found a golden wonka ticket.";
