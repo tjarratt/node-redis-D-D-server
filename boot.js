@@ -47,7 +47,6 @@ gh.configure({
 });
 
 ["account", 
-  "find", 
   "map", 
   "session", 
   "talk", 

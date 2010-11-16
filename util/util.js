@@ -6,10 +6,11 @@ exports.inspect = function(obj) {
 }
 
 exports.hashResultMaybe = function(hash, value) {
-  if (!hash || !value) {return false;}
+  if (!hash || (!value && value != false)) {return false;}
+  sys.puts("hash: " + hash);
+  sys.puts("value: " + value.toString());
   
   var maybeValue = hash[value];
   maybeValue = maybeValue? maybeValue.toString('utf8') : false;
-  
   return maybeValue;
 }

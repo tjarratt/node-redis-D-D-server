@@ -36,33 +36,36 @@ exports.findUsersCharacters = function(userId, callback) {
     //do some validation for an empty list otherwise _.each blows up
     pcIDlist = pcIDlist? pcIDlist: [];
     sys.puts("got these ids:" + pcIDlist);
-    util.inspect(pcIDlist);
     
     var players = [];
+    var numToPush = pcIDlist.length;
+    
     _.each(pcIDlist, function(pcId, index, list) {
       sys.puts("getting info for pc w/ Id:" + pcId);
       client.hmget("pc:" + pcId, "name", "img", function(e, playerInfo) {
-        var name = hashResultMaybe(playerInfo, 0);
-        var image = hashResultMaybe(playerInfo, 1);
+        var name = util.hashResultMaybe(playerInfo, 0);
+        var image = util.hashResultMaybe(playerInfo, 1);
         
         players.push({
           'name' : name,
           'img' : image
-        });
+        }); 
+        numToPush--;
+        if (numToPush <= 0) {
+          callback(players);
+        }
       });
     });
-    
-    callback(players);
   });
 }
 
 exports.getPCInfo = function(pcID) {
   client.hgetall("pc:" + pcID, function(e, playerInfo) {
-    var name = hashResultMaybe(playerInfo, "name");
-    var race = hashResultMaybe(playerInfo, "race");
-    var owner = hashResultMaybe(playerInfo, "owner");
-    var _class = hashResultMaybe(playerInfo, "_class");
-    var img = hashResultMaybe(playerInfo, "image");
+    var name = util.hashResultMaybe(playerInfo, "name");
+    var race = util.hashResultMaybe(playerInfo, "race");
+    var owner = util.hashResultMaybe(playerInfo, "owner");
+    var _class = util.hashResultMaybe(playerInfo, "_class");
+    var img = util.hashResultMaybe(playerInfo, "image");
     
     return {'name': name, 
             "race": race,
@@ -73,14 +76,14 @@ exports.getPCInfo = function(pcID) {
   });
 }
 
-var hashResultMaybe = function(hash, value) {
+/*var hashResultMaybe = function(hash, value) {
   if (!hash || !value) {return false;}
   
   var maybeValue = hash[value];
   maybeValue = maybeValue? maybeValue.toString('utf8') : false;
   
   return maybeValue;
-}
+}*/
 
 /*
   a player is associated with a user

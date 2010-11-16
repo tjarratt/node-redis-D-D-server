@@ -19,8 +19,8 @@ gh.get("/pc", function() {
   sys.puts("looking up username for cookieId:" + sessionId);
   client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, resultArray) {
     var renderCallback = function(playerList) {
+      sys.puts("in myPCs render callback with list: " + playerList);
       self.model['myPCs'] = playerList;
-      
       self.render("pc");
     }
     
@@ -40,12 +40,9 @@ gh.get("/pc", function() {
       return renderCallback([]);
     }
     
+    //find user's characters
     players.findUsersCharacters(username, renderCallback);
   });
-  
-  //find user's characters
-  
-  //render page
 });
 
 gh.get("/pc/{id}", function(args) {
@@ -59,15 +56,23 @@ gh.post("/pc/new", function(args) {
   var self = this;
   var sessionId = gh.request.getCookie("uid");
   client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
+    sys.puts("seems like " + result[0].toString('utf8') + " is creating a new PC");
+    
     var username = util.hashResultMaybe(result, 0);
-    var defaultImage = util.hashResultMaybe(result, 1);
+    //var defaultImage = util.hashResultMaybe(result, 1);
+    sys.puts("for sessionId: " + sessionId);
+    sys.puts("found user: " + username);
+    
     if (!username) {
       return self.renderText("Have you ever been authenticated?");
     }
     
+    sys.puts("params: " + self.params);
+    sys.puts("creating user " + self.params["name"].toString("utf8") + ", " + self.params["class"].toString("utf8") + " (" + self.params["race"].toString("utf8") + ")");
     var name = util.hashResultMaybe(self.params, "name");
-    var _class = util.hashResultMaybe(self.parmas, "class");
-    var race = util.hashResultMaybe(self.parms, "race");
+    var _class = util.hashResultMaybe(self.params, "class");
+    var race = util.hashResultMaybe(self.params, "race");
+    
     //TODO: get the image the correct way, as we do for maps
     var image = util.hashResultMaybe(self.params, "image");
 
@@ -76,17 +81,17 @@ gh.post("/pc/new", function(args) {
       
       var savedNewCharacterCallback = function(result) {
         var gotPCsCallback = function(players) {
+          sys.puts("got players for this user: " + players);
           players = players? players : [];
           
+          sys.puts('rendering pcs page');
           //render page
           self.model["myPCs"] = players;
+          self.model["username"] = username;
           self.render("pc");
-        };
-
+        }
         players.findUsersCharacters(username, gotPCsCallback);
       }
-      
-      //create new character
       return players.create(username, name, race, _class, image, savedNewCharacterCallback);
     }
   });

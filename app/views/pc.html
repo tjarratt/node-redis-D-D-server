@@ -1,13 +1,18 @@
 <h2>These are your characters, <%= username %></h2>
 <div id="playerCharacters">
+	<ul>
 	<% myPCs.forEach(function(player) { %>
-		<img src="<%= player.image %>"><span><%= player.name %></span>
+		<li>
+			<img src="<%= player.image %>">
+			<span><%= player.name %></span>
+		</li>
 	<% }); %>
+	</ul>
 </div>
 <div id="newPlayerContainer">
 	<h3>Create a new character?</h3>
 	<form name="newPlayer" method="POST" action="/pc/new">
-		<input id="name" name="username" type="text">
+		<input id="name" name="name" type="text">
 		Character Name
 		<div class="clear"></div>
 		<input id="class" name="class" type="text">
@@ -18,5 +23,7 @@
 		<div class="clear"></div>
 		<input id="image" name="image" type="file">
 		Image
+		<div class="clear"></div>
+		<input id="submit" name="submit" type="submit">
 	</form>
 </div>
