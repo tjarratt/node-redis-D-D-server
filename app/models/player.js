@@ -48,7 +48,8 @@ exports.findUsersCharacters = function(userId, callback) {
         
         players.push({
           'name' : name,
-          'img' : image
+          'img' : image,
+          "href" : "/pc/" + pcId 
         }); 
         numToPush--;
         if (numToPush <= 0) {
@@ -59,7 +60,7 @@ exports.findUsersCharacters = function(userId, callback) {
   });
 }
 
-exports.getPCInfo = function(pcID) {
+exports.getPCInfo = function(pcID, callback) {
   client.hgetall("pc:" + pcID, function(e, playerInfo) {
     var name = util.hashResultMaybe(playerInfo, "name");
     var race = util.hashResultMaybe(playerInfo, "race");
@@ -67,23 +68,15 @@ exports.getPCInfo = function(pcID) {
     var _class = util.hashResultMaybe(playerInfo, "_class");
     var img = util.hashResultMaybe(playerInfo, "image");
     
-    return {'name': name, 
+    return callback({'name': name, 
             "race": race,
             "owner": owner,
             "_class": _class,
-            "image": img};
+            "image": img,
+            "href" : "/pc/" + pcID});
     
   });
 }
-
-/*var hashResultMaybe = function(hash, value) {
-  if (!hash || !value) {return false;}
-  
-  var maybeValue = hash[value];
-  maybeValue = maybeValue? maybeValue.toString('utf8') : false;
-  
-  return maybeValue;
-}*/
 
 /*
   a player is associated with a user

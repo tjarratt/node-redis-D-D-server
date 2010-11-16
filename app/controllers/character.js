@@ -46,9 +46,34 @@ gh.get("/pc", function() {
 });
 
 gh.get("/pc/{id}", function(args) {
-  //get pc for this ID
+  var self = this,
+      sessionId = gh.request.getCookie("uid"),
+      playerId = args.id;
+  if (!playerId) {
+    sys.puts("bad request for a pc with id: " + id);
+    return self.renderText("Sorry, that didn't seem to be an actual character.");
+    //should actually render PC.html with a specific message
+    //need to build this sort of framework on top of what we're already doing here
+  }
+  client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
+    var username = util.hashResultMaybe(result, 0);
+    var defaultImage = util.hashResultMaybe(result, 1);
+    if (!username) {
+      return self.renderText("Have you ever been authenticated?");
+    }
+    var renderCallback = function(pcInfo) {
+      self.model["player"] = pcInfo;
+      return self.render("pc/singleView");
+    }
+    players.getPCInfo(playerId, renderCallback);
+  });
   
-  //render detail view
+});
+
+gh.post("/pc/{id}", function(args) {
+  //find info for this player 
+  
+  //render error on /pc page or this player info
 });
 
 gh.post("/pc/new", function(args) {
@@ -59,7 +84,7 @@ gh.post("/pc/new", function(args) {
     sys.puts("seems like " + result[0].toString('utf8') + " is creating a new PC");
     
     var username = util.hashResultMaybe(result, 0);
-    //var defaultImage = util.hashResultMaybe(result, 1);
+    var defaultImage = util.hashResultMaybe(result, 1);
     sys.puts("for sessionId: " + sessionId);
     sys.puts("found user: " + username);
     
@@ -95,10 +120,4 @@ gh.post("/pc/new", function(args) {
       return players.create(username, name, race, _class, image, savedNewCharacterCallback);
     }
   });
-});
-
-gh.post("/pc/{id}", function(args) {
-  //find info for this player 
-  
-  //render error on /pc page or this player info
 });
