@@ -78,6 +78,12 @@ exports.getPCInfo = function(pcID, callback) {
   });
 }
 
+exports.setPCInfo = function(pcId, info, callback) {
+  client.hmset("pc:" + pcId, "name" , info.name, "_class", info._class, "race", info.race, "image", info.image, function(e, result) {
+    callback(result);
+  });
+}
+
 /*
   a player is associated with a user
   

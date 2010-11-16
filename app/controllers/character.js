@@ -71,9 +71,24 @@ gh.get("/pc/{id}", function(args) {
 });
 
 gh.post("/pc/{id}", function(args) {
-  //find info for this player 
-  
-  //render error on /pc page or this player info
+  var self = this,
+      sessionId = gh.request.getCookie("uid"),
+      playerId = args.id,
+      name = util.hashResultMaybe(this.params, "name"),
+      race = util.hashResultMaybe(this.params, "race"),
+      _class = util.hashResultMaybe(this.params, "class"),
+      image = util.hashResultMaybe(this.params, "image");
+      
+  if (!playerId, name, race, _class, image) {
+    return self.renderText("Have you ever been authenticated?");
+  }
+  var playerInfo = {"name" : name, "race" : race, "_class": _class, "image" : image};
+  var renderCallback = function(result) {
+    self.model["result"] = result? true: false;
+    self.model["player"] = playerInfo;
+    return self.render("pc/singleView");
+  }
+  players.setPCInfo(playerId, playerInfo, renderCallback);
 });
 
 gh.post("/pc/new", function(args) {
