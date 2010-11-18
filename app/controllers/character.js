@@ -79,9 +79,15 @@ gh.post("/pc/{id}", function(args) {
       _class = util.hashResultMaybe(this.params, "class"),
       image = util.hashResultMaybe(this.params, "image");
       
-  if (!playerId, name, race, _class, image) {
+  if (!sessionId) {
     return self.renderText("Have you ever been authenticated?");
   }
+  if (errors.isEmpty([playerId, name, race, _class, image])) {
+    return self.renderText("All fields are mandatory, broseph.");
+  }
+  sys.puts("updating a user with image: " + image.path);
+  util.inspect(image);
+  
   var playerInfo = {"name" : name, "race" : race, "_class": _class, "image" : image};
   var renderCallback = function(result) {
     self.model["result"] = result? true: false;

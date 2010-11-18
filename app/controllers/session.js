@@ -202,3 +202,19 @@ gh.get("/session/edit/{id}", function(args) {
     self.render("sessions/edit");
   });
 });
+
+gh.post("/session/delete/{id}", function(args) {
+  var self = this,
+      sessionId = args.id;
+  
+  var callback = function(text) {    
+    self.renderText(text? "true" : "false");
+  }
+  sys.puts("trying to delete session with id: " + sessionId);
+  
+  client.hdel(sessionId, function(e, result) { sys.puts("deleted: " + sessionId + " hash obj") });
+  
+  client.hdel("sessions", sessionId, function(e, result) {
+    sys.puts("deleted sessionId: " + sessionId);
+  });
+})

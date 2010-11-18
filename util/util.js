@@ -6,7 +6,7 @@ exports.inspect = function(obj) {
 }
 
 exports.hashResultMaybe = function(hash, value) {
-  if (!hash || (!value && value != false)) {return false;}
+  if (!hash || (!value && typeof value != "number")) {return false;}
   sys.puts("hash: " + hash);
   sys.puts("value: " + value.toString());
   
