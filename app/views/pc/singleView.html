@@ -1,0 +1,18 @@
+<div id="playerContainer">
+	<h3>Update?</h3>
+	<form method="POST" action="<%= player.href %>">
+		<input id="name" value="<%= player.name %>" name="name" type="text">
+		Character Name
+		<div class="clear"></div>
+		<input id="class" name="class" value="<%= player._class %>" type="text">
+		Class
+		<div class="clear"></div>
+		<input id="race" name="race" value="<%= player.race %>" type="text">
+		Race
+		<div class="clear"></div>
+		<input id="image" name="image" value="<%= player.image %>" type="file">
+		Image
+		<div class="clear"></div>
+		<input id="submit" name="submit" type="submit">
+	</form>
+</div>
