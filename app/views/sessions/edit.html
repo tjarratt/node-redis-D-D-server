@@ -23,11 +23,12 @@
 			<span class="mapHeight" style="padding: 20px;" >Image</span>
 		<div id="mapsList" style="display:none">
 			<div class="mapInnerContainer">
-				<a href="#">
+				<a class="detail" href="#">
 					<span class="mapName" style="padding: 20px;" ></span>
 				</a>
 				<span class="mapWidth" style="padding: 20px;" ></span>
 				<span class="mapHeight" style="padding: 20px;" ></span>
+				<a class="rm" href="#" onclick="deleteThis(this); return false;">x</a>
 				<div class="file-uploader">
 					<noscript>
 						Please enable Javascript
@@ -114,6 +115,23 @@
       });
       return false;
 		}
+		
+		function deleteThis(mapContext) {
+			var mapId = mapContext.id;
+			$.ajax({
+				async: true,
+				url: "/maps/" + mapId + "/delete",
+				type: "POST",
+				dataType: "json",
+				success: function() {
+					$("a#" + mapId).parent().remove();
+				},
+				error: function() {
+					alert("could not delete this map.");
+				}
+			});
+		}
+		
 		//get existing maps
 		$.ajax({
 			async: true,
@@ -132,10 +150,11 @@
 					$list.append(mapHTML);
 					var $newMapItem = $list.children("div:last");
 
-					$newMapItem.children("a").attr("href", "/maps/" + mapObj.id);
+					$newMapItem.children("a.detail").attr("href", "/maps/" + mapObj.id);
 					$newMapItem.find("span.mapName").html(mapObj.name);
 					$newMapItem.children("span.mapWidth").html(mapObj.width);
 					$newMapItem.children("span.mapHeight").html(mapObj.height);
+					$newMapItem.children("a.rm").attr("id", mapObj.id);
 					
 					//need to actually retrieve a list of maps as well
 					if (mapObj.file == "null") {						

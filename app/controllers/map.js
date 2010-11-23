@@ -29,29 +29,58 @@ gh.get("/maps/{id}", function(args) {
     
     _.each(result, function(name, mapKey, list) {
       sys.puts("Looking at map with key: " + mapKey);
-      client.hmget(mapKey, "name", "width", "height", function(e, thisMap) {
-        var map = {name: thisMap[0].toString('utf8'),
-                  width: thisMap[1].toString('utf8'),
-                  height: thisMap[2].toString('utf8'),
-                  id: mapKey,
-                  file: "null",
-                  };
-        
-        total--;
-        mapObjs.push(map);
-        sys.puts("pushed map onto stack. " + total + " maps remaining");
-       
-        if (total == 0) {
-          sys.puts("emitting maps Array");
-          self.renderText(json(mapObjs));
+      client.exists(mapKey, function(e, result) {
+        if (e || !result) {
+          sys.puts("bad map: " + mapKey);
+          total--;
+          //this is a bad map
+          return;
         }
-       
-      });//getall
+        client.hmget(mapKey, "name", "width", "height", function(e, thisMap) {
+          var map = {name: thisMap[0].toString('utf8'),
+                    width: thisMap[1].toString('utf8'),
+                    height: thisMap[2].toString('utf8'),
+                    id: mapKey,
+                    file: "null",
+                    };
+
+          total--;
+          mapObjs.push(map);
+          sys.puts("pushed map onto stack. " + total + " maps remaining");
+
+          if (total == 0) {
+            sys.puts("emitting maps Array");
+            self.renderText(json(mapObjs));
+          }
+
+        });//getall
+      });
      
     });//each
         
   });//getall
 });
+
+function getAjaxData(request, callback) {
+  var body = request.url + "?";
+  request.on("data", function(chunk) {
+    body += chunk;
+  });
+  request.on("end", function() {
+    var ajaxData = require("url").parse(body, true);
+    callback(ajaxData);
+  });
+}
+
+function emitAjaxResponse(response, body, contentType) {
+  contentType = contentType? contentType : "application/json";
+  response.writeHead(200, {
+    'Content-Length': body.length,
+    'Content-Type': contentType
+  });
+  response.write(body);
+  response.end();
+}
 
 /*
   For now, create a map that only has the meta data
@@ -113,11 +142,12 @@ gh.post("/maps/new", function(args) {
             
             //setup the view the ajax will render
             var body = '<div class="mapInnerContainer">' +
-      				'<a href="#">' +
+      				'<a class="detail" href="#">' +
       					'<span class="mapName" style="padding: 20px;" >' + name + '</span>' +
       				'</a>' +
       				'<span class="mapWidth" style="padding: 20px;" >' + width + '</span>' +
       				'<span class="mapHeight" style="padding: 20px;" >' + height + '</span>' +
+      				'<a class="rm" id="' + newUUID + '" href="#" onclick="deleteThis(this); return false;">x</a>'
       				'<div class="file-uploader">' +
                 '<input id=\'upload" + index + "\' type=\'file\' name=\'file\'/> <div class=\'clear\'></div>' + 
     						'<input type=\'submit\' onclick=\'return ajaxFileUpload(this);\' value=\'Send\'>' + 
@@ -135,6 +165,23 @@ gh.post("/maps/new", function(args) {
     });
   });
   
+});
+
+gh.post("/maps/{id}/delete", function(args) {
+  var self = this,
+      mapId = args.id;
+  var gotAjaxData = function(ajaxParams) {
+    client.hexists(mapId, "width", function(e, result) {
+      //gotta make sure this is actually a map key (should probably be prefaced by map: in redis)
+      if (e || !result) {return emitAjaxResponse(gh.response, "false", "application/json");}
+      client.del(mapId, function(e, result) {
+        if (e || !result) {return emitAjaxResponse(gh.response, "false", "application/json");}
+        
+        emitAjaxResponse(gh.response, "true", "application/json");
+      });
+    });
+  }
+  getAjaxData(gh.request, gotAjaxData);
 });
 
 /*
