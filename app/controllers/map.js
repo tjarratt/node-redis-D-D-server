@@ -11,6 +11,7 @@ require("../../lib/underscore-min")
 var json = JSON.stringify;
 
 var gh = require('grasshopper');
+var formidable = require("formidable");
 
 gh.get("/maps/{id}", function(args) {
   var self = this;
@@ -60,43 +61,80 @@ gh.get("/maps/{id}", function(args) {
 
 gh.post("/maps/new", function(args) {
   sys.puts("Trying to create a new map.");
-  
-  if (!this.params) {
-    return this.renderText("Need to specify some arguments, brutha");
-  }
-  
-  util.inspect(this.params);
-  
   var self = this;
-  var sessionId = this.params['id'],
-      name = this.params['name'],
-      width = this.params['width'],
-      height = this.params['height'];
-      
-  var postData = [sessionId, name, width, height];
-  if (errors.isEmpty(postData)) {
-    util.inspect(postData);
-    return this.renderText("Needs more sessionId specified.")
-  }
-
-  client.hexists("sessions", sessionId, function(e, result) {
-    if (e || !result) {return self.renderText("Invalid session.")}
-    var newUUID = Math.uuid();
+  var ajaxData = "/maps/new?";
   
-    client.hmset(newUUID, "session", sessionId, "name", name, "width", width, "height", height, function(e, result) {
+  //util.inspect(this);
+  
+  //need to wait for the rest of the ajax data to send
+  gh.request.on("data", function(chunk) {
+    sys.puts("got chunk from ajax map req:" + chunk);
+    ajaxData += chunk;
+  });
+  gh.request.on("end", function() {
+    var params = require('url').parse(ajaxData, true).query;
+    util.inspect(params);
     
-      client.hset(sessionId + "/maps", newUUID, name, function(e, result) {
-        if (e) {
-          //TODO: undo the last command
-          //This is a fairly common occurrence with this data model, perhaps we should, at startup, look for any 'orphaned' objects so they aren't floating free in redis
-          sys.puts("Created a map for session: " + sessionId + " but did not associate it with anything. See mapid: " + newUUID);
-          return self.renderText("FUCK. Well you created a map, but it's not associated with anything.")
-        }
+    var sessionId = params.id;
+        name = params.name;
+        width = params.width;
+        height = params.height;
+        ajaxId = params.aid,
+        cookieId = gh.request.getCookie("uid");
         
-        self.renderText(newUUID);
+    //get username, ajaxId from cookie
+    client.hmget("cookie:" + cookieId, "username", "ajaxId", function(e, result) {
+      var username = util.hashResultMaybe(result, 0);
+      var realAjaxId = util.hashResultMaybe(result, 1);
+      sys.puts(username);
+      sys.puts(realAjaxId);
+      if (realAjaxId != ajaxId) {
+        sys.puts("bad ajax id for this user");
+        return self.renderText("false");
+      }
+      
+      //confirm session exists
+      client.hexists("sessions", sessionId, function(e, result) {
+        if (e || !result) {return self.renderText("Invalid session.")}
+        var newUUID = Math.uuid();
+
+        //TODO: confirm user owns session 
+        //create new map
+        sys.puts("creating new map with id: " + newUUID);
+        client.hmset(newUUID, "session", sessionId, "name", name, "width", width, "height", height, function(e, result) {
+
+          client.hset(sessionId + "/maps", newUUID, name, function(e, result) {
+            if (e) {
+              //TODO: undo the last command
+              //This is a fairly common occurrence with this data model, perhaps we should, at startup, look for any 'orphaned' objects so they aren't floating free in redis
+              sys.puts("Created a map for session: " + sessionId + " but did not associate it with anything. See mapid: " + newUUID);
+              return self.renderText("FUCK. Well you created a map, but it's not associated with anything.")
+            }
+            
+            //setup the view the ajax will render
+            var body = '<div class="mapInnerContainer">' +
+      				'<a href="#">' +
+      					'<span class="mapName" style="padding: 20px;" >' + name + '</span>' +
+      				'</a>' +
+      				'<span class="mapWidth" style="padding: 20px;" >' + width + '</span>' +
+      				'<span class="mapHeight" style="padding: 20px;" >' + height + '</span>' +
+      				'<div class="file-uploader">' +
+                '<input id=\'upload" + index + "\' type=\'file\' name=\'file\'/> <div class=\'clear\'></div>' + 
+    						'<input type=\'submit\' onclick=\'return ajaxFileUpload(this);\' value=\'Send\'>' + 
+      				'</div>' +
+      			'</div>';
+            gh.response.writeHead(200, {
+              'Content-Length': body.length,
+              'Content-Type': 'application/html'
+            });
+            gh.response.write(body);
+            gh.response.end();
+          });
+        });
       });
     });
   });
+  
 });
 
 /*

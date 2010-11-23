@@ -43,14 +43,41 @@
 		<div class="clear"></div>
 		<input type="text" id="mapWidth" name="width" />Width
 		<div class="clear"></div>
-		<input type="text" id="mapHeight" name="height" />Height
+		<input type="text" id="mapHeight" name="height" />Height  
 		<div class="clear"></div>
+		<input type="button" id="newMapSubmit" name="submit" value="Create a new map"/>
 	</div>
 </div>
 <div class="scripts">
+	<input id="aid" type="text" style="visibility: hidden;" value="<%= sid %>"/>
+	<script language="javascript" src="/lib/ajaxfileupload.js"></script>
 	<script language="javascript">
-		var id = $("div.editId").attr("id");
-		id = id? id : 0;
+		var sessid = $("div.editId").attr("id");
+		sessid = sessid? sessid : 0;
+		
+		$("input#newMapSubmit").click(function(e) {
+			$.ajax({
+				async: true,
+				url: "/maps/new",
+				type: "POST",
+				contentType: "application/json",
+				dataType: "html",
+				data: {name: $("input#mapName").val(), 
+							width: $("input#mapWidth").val(), 
+							height: $("input#mapHeight").val(),
+							id: sessid,
+							aid: $("input#aid").val()},
+				success: function(response) {
+					if (!response || response == "false") {
+						return alert("bad response ajax map creation: " + response);
+					}
+					$("div#mapsList").append(response);
+				},
+				error: function(e) {
+					alert("error in ajax map creation");
+				},
+			});
+		});
 		var errorCallback = function(err) {
 			$("p#mapLoading").html("Hmm, that wasn't quite a success. Perhaps, there is no spoon?");
 			$("p#mapLoading").parent().append("<p>Details: " + err.toString() + "</p>");
@@ -59,80 +86,41 @@
 		function ajaxFileUpload(context) {
 			var fileInput = $(context).parent().children(":first")[0];
 		 
-	        $.ajaxFileUpload({
-	                url: "/maps/" + id + "/upload",
-	                secureuri: false,
-	                fileElementId: $(fileInput).attr("id"),
-	                dataType: "json",
-					type: "POST",
-	                beforeSend:function() {
-	                    $("#loading").show();
-	                },
-	                complete:function() {
-	                    $("#loading").hide();
-	                },              
-	                success: function (data, status) {
-	                    if(typeof(data.error) != "undefined") {
-	                        if(data.error != "") {
-	                            alert(data.error);
-	                        }
-													else {
-		                          alert(data.msg);
-		                      }
-	                    }
-	                },
-	                error: function (data, status, e) {
-	                    alert(e);
-	                }
-            });
-	        return false;
+      $.ajaxFileUpload({
+	      url: "/maps/" + sessid + "/upload",
+	      secureuri: false,
+	      fileElementId: $(fileInput).attr("id"),
+	      dataType: "json",
+			  type: "POST",
+				beforeSend: function() {
+					$("#loading").show();
+	      },
+				complete: function() {
+					$("#loading").hide();
+				},              
+				success: function(data, status) {
+					if(typeof(data.error) != "undefined") {
+						if(data.error != "") {
+							alert(data.error);
+						}
+						else {
+							alert(data.msg);
+						}
+					}
+				},
+				error: function (data, status, e) {
+					alert(e);
+				} 
+      });
+      return false;
 		}
-		//TOOD: can probably remove this
-		onUpload = function(context) {
-			//context of this should be the save input element
-			//ideally we could listen for a "chose file" event rather than using ANOTHER input element
-			var fileInput = $(context).parent().children(":first")[0];
-			console.log(fileInput.files);
-			
-			var file = fileInput.files[0];
-			
-			console.log(file.name);
-			console.log(file.size);
-			console.log(file.type);
-			var xhr = new XMLHttpRequest();
-			xhr.open("POST", "/maps/" + id + "/upload", true);
-			
-			function onprogressHandler(evt) {
-			    var percent = event.loaded/event.total*100;
-			    console.log("Upload progress: " + percent + "%");
-			}
-			
-			function setBody(name, value)
-			{
-				var body = "--" + boundary + "\\r\\n";
-				body += "Content-Disposition: form-data; name=\'" + name + "\'" + "\\r\\n\\r\\n";
-				body += value + "\\r\\n";
-				return body;
-			}
-			
-			
-			var boundary = "Boundary_" + new Date().getMilliseconds() + ";";
-			var body = setBody("formfield", file.toString());
-			body += "--" + boundary; //end of body
-			
-			xhr.setRequestHeader("X-File-Name", file.name);
-			xhr.setRequestHeader("Content-Type", "multipart/form-data;boundary="+boundary+"; charset=UTF-8");
-			xhr.upload.addEventListener("progress", onprogressHandler, false);
-			xhr.send(body); // Less Simple...
-		}
-
 		//get existing maps
 		$.ajax({
 			async: true,
-			url: "/maps/" + id,
+			url: "/maps/" + sessid,
 			success: function(response) {
 				response = JSON.parse(response);
-				if (response == "false") {
+				if (!response || response == "false") {
 					errorCallback("I found no maps. Oh my god. What does this mean?");
 				}
 				
@@ -171,32 +159,5 @@
 				errorCallback(err);
 			}
 		});
-		//TODO: can probably remove this function
-		var uploadMap = function() {
-			var data = {
-				id: $("div.editId").attr("id"),
-				name: $("input#mapName").val(),
-				width: $("input#mapWidth").val(),
-				height : $("input#mapHeight").val()
-			}
-			
-			var mapCreationCallback = function(transport) {
-				//TODO: need to indicate that this failed
-				if (!transport || transport.success != true || !transport.id) {return;}
-				
-				//TODO: abstract away some of this so we can reuse it
-				//add the map that we just saved to the list of maps visible here
-				//(or we could do this before submission....)
-				var $list = $("div#mapsList");
-				var mapHTML = $list.children("div:last");
-				
-			}
-			$.ajax({
-				url: "/maps/new",
-				type: "POST",
-				data: data,
-				success: mapCreationCallback,
-			});     
-		}
 	</script>
 </div>

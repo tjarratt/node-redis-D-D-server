@@ -53,7 +53,8 @@ gh.get("/join/{id}", function(args) {
         client.lrange(id + "/users", 0, 10, function(e, users) {
           users = users? users.toString().split(",") : [];
           totalUsers = users.length;
-          var thisPlayer = {name: thisUser, src: "/res/img/" + imageName + ".png"}
+          if (! imageName.match("/res/img/")) {imageName = "/res/img/" + imageName + ".png"}
+          var thisPlayer = {name: thisUser, src: imageName}
         
           var players = [thisPlayer]
         

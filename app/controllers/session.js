@@ -180,7 +180,8 @@ gh.get("/session/edit/{id}", function(args) {
   this.disableCache();
   
   var self = this,
-      id = args.id;
+      id = args.id,
+      sessionId = gh.request.getCookie("uid");
   
   if (errors.isEmpty([id])) {return exports.responses['notEnoughInfo']}
     
@@ -190,13 +191,18 @@ gh.get("/session/edit/{id}", function(args) {
     name = result[0];
     max = result[1];
     pass = result[2] ? result[2] : "none";
+    var ajaxId = Math.uuid();
     
-    self.model['name'] = name;
-    self.model['max'] = max;
-    self.model['pass'] = pass? pass : "none";
-    self.model['id'] = id;
+    client.hset("cookie:" + sessionId, "ajaxId", ajaxId, function(e, result) {
+      self.model["sid"] = ajaxId;
+      self.model['name'] = name;
+      self.model['max'] = max;
+      self.model['pass'] = pass? pass : "none";
+      self.model['id'] = id;
+
+      self.render("sessions/edit");
+    });
     
-    self.render("sessions/edit");
   });
 });
 

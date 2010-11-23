@@ -31,18 +31,22 @@ require("../../lib/underscore-min");
 */
 
 exports.setUsersDefaultImage = function(sessionId, image, callback) {
-  client.exists("cookie:" + sessionId, function(result) {
+  client.exists("cookie:" + sessionId, function(e, result) {
     if (!result) {
+      sys.puts("user that doesn't have a session tried to set an image.");
       return callback(false);
     }
     
     client.hset("cookie:" + sessionId, "defaultImage", image, function(e, result) {
-      callback(result);
+      if (e || !result) {sys.puts("failure when trying to set a user's image.");}
+      callback(true);
     });
   });
 }
 
 exports.getUserByCookieId = function(sessionId, callback) {
+  sys.puts("getting user info for sessionId: " + sessionId);
+  
   client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
     if (e || !result || !result.length || result.length < 1 || result[0] == null) {
       return callback(false);

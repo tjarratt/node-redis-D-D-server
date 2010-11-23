@@ -114,6 +114,7 @@ gh.get("/account", function() {
   var gotAuthenticatedSession = function(userInfo) {
     if (!userInfo) {
       //unauthenticated version of this page
+      sys.puts("unauthenticated view of /account");
       self.model['message'] = "";
       return self.render('account');
     }
@@ -122,6 +123,7 @@ gh.get("/account", function() {
     self.model["image"] = userInfo.defaultImage;
     return self.render("account/accountDetails");
   }
+  sys.puts("got pageview from sessionid: " + sessionId);
   users.getUserByCookieId(sessionId, gotAuthenticatedSession);
 });
 
@@ -129,25 +131,38 @@ gh.post("/account/image", function(args) {
   var self = this,
       sessionId = gh.request.getCookie("uid"),
       image = util.hashResultMaybe(this.params, "image"),
-      isCustom = util.hashResultMaybe(this.params, "custom");
-  isCustom = isCustom ? isCustom : false;
+  image = image? "/res/img/" + image + ".png" : false;
   
   if (!sessionId) {return this.renderText("Have you ever been authenticated?");}
   if (!image) {return this.renderText("Did you submit an image or nothing at all?");}
   
   var updatedImageCallback = function(result) {
     if (!result) {self.renderText("failed to update image. welp.");}
-    |
-    var getUserInfo = function(userInfo) {
-      self.model["name"] = userInfo.userName;
-      self.model["image"] = userInfo.defaultImage;
-      return self.render("account/accountDetails");
-    }
-    users.getUserByCookieId(sessionId, getUserInfo);
+    return self.redirect("/account");
   }
   
   //assume for now that this is not a custom image
   users.setUsersDefaultImage(sessionId, image, updatedImageCallback);
+});
+
+gh.get("/account/image/custom", function() {
+  sys.puts("bad get request to custom image upload path");
+  this.renderText("false");
+});
+
+gh.post("/account/image/custom", function(args) {
+  var self = this,
+      sessionId = gh.request.getCookie("uid"),
+      image = this.params["image"];
+      
+  sys.puts("got user with sessionId: " + sessionId + " trying to upload an image: " + image);
+      
+  if (!sessionId) {return this.renderText("Have you ever been authenticated?");}
+  if (!image) {return self.renderText("gotta submit an image, with the request, dude.");}
+  
+  //get image req
+  sys.puts("got this image from custom request:" + image);
+  util.inspect(image);
 });
 
 gh.post("/account/{action}", function(args) {
@@ -178,15 +193,15 @@ gh.post("/account/{action}", function(args) {
   var authCallback = function(result) {   
     if (!result || !result.name) {
       sys.puts("failure in authentication");
-      self.model['message'] = "Failed to log you in. The hivemind has been notified.";
-      return self.render("account");
+      self.flash['message'] = "Failed to log you in. The hivemind has been notified.";
+      return self.redirect("/account");
     }
     
     var now = new Date();
-    self.model['now'] = now;
-    self.model['message'] = "Logged in Successfully. Hello " + result.name + "."; 
+    self.flash['now'] = now;
+    self.flash['message'] = "Logged in Successfully. Hello " + result.name + "."; 
     
-    self.render("home");
+    self.redirect("/account");
   }
   
   if (action == "register"){
