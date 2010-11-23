@@ -70,33 +70,6 @@ gh.get("/pc/{id}", function(args) {
   
 });
 
-gh.post("/pc/{id}", function(args) {
-  var self = this,
-      sessionId = gh.request.getCookie("uid"),
-      playerId = args.id,
-      name = util.hashResultMaybe(this.params, "name"),
-      race = util.hashResultMaybe(this.params, "race"),
-      _class = util.hashResultMaybe(this.params, "class"),
-      image = util.hashResultMaybe(this.params, "image");
-      
-  if (!sessionId) {
-    return self.renderText("Have you ever been authenticated?");
-  }
-  if (errors.isEmpty([playerId, name, race, _class, image])) {
-    return self.renderText("All fields are mandatory, broseph.");
-  }
-  sys.puts("updating a user with image: " + image.path);
-  util.inspect(image);
-  
-  var playerInfo = {"name" : name, "race" : race, "_class": _class, "image" : image};
-  var renderCallback = function(result) {
-    self.model["result"] = result? true: false;
-    self.model["player"] = playerInfo;
-    return self.render("pc/singleView");
-  }
-  players.setPCInfo(playerId, playerInfo, renderCallback);
-});
-
 gh.post("/pc/new", function(args) {
   //pull information out of the POST data
   var self = this;
@@ -118,9 +91,6 @@ gh.post("/pc/new", function(args) {
     var name = util.hashResultMaybe(self.params, "name");
     var _class = util.hashResultMaybe(self.params, "class");
     var race = util.hashResultMaybe(self.params, "race");
-    
-    //TODO: get the image the correct way, as we do for maps
-    var image = util.hashResultMaybe(self.params, "image");
 
     //validate
     if (errors.isEmpty([name, _class, race, image])) {
@@ -138,7 +108,33 @@ gh.post("/pc/new", function(args) {
         }
         players.findUsersCharacters(username, gotPCsCallback);
       }
-      return players.create(username, name, race, _class, image, savedNewCharacterCallback);
+      return players.create(username, name, race, _class, savedNewCharacterCallback);
     }
   });
+});
+
+gh.post("/pc/{id}", function(args) {
+  var self = this,
+      sessionId = gh.request.getCookie("uid"),
+      playerId = args.id,
+      name = util.hashResultMaybe(this.params, "name"),
+      race = util.hashResultMaybe(this.params, "race"),
+      _class = util.hashResultMaybe(this.params, "class"),
+      image = util.hashResultMaybe(this.params, "image");
+      
+  if (!sessionId) {
+    return self.renderText("Have you ever been authenticated?");
+  }
+  if (errors.isEmpty([playerId, name, race, _class, image])) {
+    return self.renderText("All fields are mandatory, broseph.");
+  }
+  //TODO: confirm session, check ownership
+  
+  var playerInfo = {"name" : name, "race" : race, "_class": _class, "image" : image};
+  var renderCallback = function(result) {
+    self.model["result"] = result? true: false;
+    self.model["player"] = playerInfo;
+    return self.render("pc/singleView");
+  }
+  players.setPCInfo(playerId, playerInfo, renderCallback);
 });

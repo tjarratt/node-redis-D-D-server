@@ -6,7 +6,7 @@ var errors = require('../../util/err');
 var client = require('../../lib/redis-client').createClient();
 
 var errors = require('../../util/err');
-require("../../lib/underscore-min")
+require("../../lib/underscore-min"); //exposed via _ obj
 
 var gh = require('grasshopper');
 var cookie = require('cookie');
@@ -125,7 +125,7 @@ gh.get("/join/{id}", function(args) {
                 self.model['display'] = responses['joinSuccess'];
                 self.model['listenId'] = id;
                 self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
-                self.model['websocketId'] = sessionId;
+                self.model['websocketId'] = sessionId; //TODO: use this to dedupe websockets when someone joins a room in multiple tabs
                 self.model['imageName'] = imageName;
                 self.model['userName'] = thisUser;
                 self.model['url'] = "butter3.local";

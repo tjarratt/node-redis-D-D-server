@@ -140,10 +140,7 @@ gh.post("/session/create", function(args) {
             return;
            });
        }
-       self.model['display'] = exports.responses['sessionCreated'];
-       self.model['sessions'] = [];
-       
-       self.render("session");
+       self.renderText(exports.responses['sessionCreated']);
     });
   });
   

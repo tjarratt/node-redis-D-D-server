@@ -6,6 +6,7 @@ var client = require("redis").createClient();
 var errors = require('../../util/err');
 var util = require('../../util/util');
 var errorHandler = errors.newHandler();
+var users = require("../models/user");
 
 var gh = require('grasshopper');
 
@@ -16,7 +17,6 @@ cookie.secret = "thisIsAGoodSecret!";
 //possible responses emitted by this object
 exports.responses = {
   'accountStorageError' : {code: 500, message: "An error occurred while processing your request."},
-  
   'accountSuccess' : {code: 200, message: "Account created successfully."},
   'accountInputFailure' : {code: 409, message: "username and password are necessary for account creation."},
   'accountError' : {code: 500, message: "whoa something bad happened when trying to create your account. Sorry bro."},
@@ -36,8 +36,9 @@ exports.createAccount = function(username, password, callback) {
     return;
   });
   
-  client.hexists("accounts", username, function(result) {			
-		if (result == false) {
+  client.hexists("accounts", username, function(result) {
+		sys.puts("got result: " + result + " for hexists account " + username);
+		if (!result) {
 			client.hset("accounts", username, password, function(err, result) {
 			  //drop cookie, set session info
 			  var newUID = Math.uuid();
@@ -46,10 +47,10 @@ exports.createAccount = function(username, password, callback) {
 			    var res = gh.response;
 			    
 			    sys.puts("writing uid, uname cookies");
-          res.setCookie("uid", newUID);
-  			  //res.setCookie("uname", username);
+          		    res.setCookie("uid", newUID);
+  			    //res.setCookie("uname", username);
 			  
-  				return callback(exports.responses['accountSuccess']);
+  			    return callback(exports.responses['accountSuccess']);
 			  });
 		  });
 	  }
@@ -106,8 +107,47 @@ exports.Login = function(username, password, callback) {
 }
 
 gh.get("/account", function() {
-  this.model['message'] = "";
-  this.render('account');
+  var self = this;
+  
+  //check for authenticated user, so we can allow them to set a new password or default image
+  var sessionId = gh.request.getCookie("uid");
+  var gotAuthenticatedSession = function(userInfo) {
+    if (!userInfo) {
+      //unauthenticated version of this page
+      self.model['message'] = "";
+      return self.render('account');
+    }
+    
+    self.model["name"] = userInfo.userName;
+    self.model["image"] = userInfo.defaultImage;
+    return self.render("account/accountDetails");
+  }
+  users.getUserByCookieId(sessionId, gotAuthenticatedSession);
+});
+
+gh.post("/account/image", function(args) {
+  var self = this,
+      sessionId = gh.request.getCookie("uid"),
+      image = util.hashResultMaybe(this.params, "image"),
+      isCustom = util.hashResultMaybe(this.params, "custom");
+  isCustom = isCustom ? isCustom : false;
+  
+  if (!sessionId) {return this.renderText("Have you ever been authenticated?");}
+  if (!image) {return this.renderText("Did you submit an image or nothing at all?");}
+  
+  var updatedImageCallback = function(result) {
+    if (!result) {self.renderText("failed to update image. welp.");}
+    |
+    var getUserInfo = function(userInfo) {
+      self.model["name"] = userInfo.userName;
+      self.model["image"] = userInfo.defaultImage;
+      return self.render("account/accountDetails");
+    }
+    users.getUserByCookieId(sessionId, getUserInfo);
+  }
+  
+  //assume for now that this is not a custom image
+  users.setUsersDefaultImage(sessionId, image, updatedImageCallback);
 });
 
 gh.post("/account/{action}", function(args) {
@@ -131,6 +171,7 @@ gh.post("/account/{action}", function(args) {
   
   var regCallback = function(result) {
     sys.puts("in registration callback with: " + result);
+    util.inspect(result);
     self.renderText(result.message);
   }
   

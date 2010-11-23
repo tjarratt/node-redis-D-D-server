@@ -4,16 +4,14 @@ var util = require("../../util/util");
 var client = require('../../lib/redis-client').createClient();
 require("../../lib/uuid");
 
-exports.create = function(owner, name, race, _class, image, callback) {
-  //image is optional, use the default image if we need to
-  image = image? image : "Tokens.png";
+exports.create = function(owner, name, race, _class, callback) {
   
 	var newPC = {
 		'owner' : owner,
 		'name' : name,
 		'race' : race,
 		'class' : _class,
-		'image' : image
+		'image' : "Tokens.png"
 	}
 	
 	//TODO: validate this info
@@ -39,12 +37,18 @@ exports.findUsersCharacters = function(userId, callback) {
     
     var players = [];
     var numToPush = pcIDlist.length;
+	if (numToPush == 0) {
+		return callback([]);
+	}
     
     _.each(pcIDlist, function(pcId, index, list) {
       sys.puts("getting info for pc w/ Id:" + pcId);
       client.hmget("pc:" + pcId, "name", "img", function(e, playerInfo) {
         var name = util.hashResultMaybe(playerInfo, 0);
         var image = util.hashResultMaybe(playerInfo, 1);
+        image = image ? image : "/res/img/Tokens.png";
+        
+        sys.puts(pcId + ": is " + name + " with image " + image);
         
         players.push({
           'name' : name,

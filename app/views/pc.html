@@ -4,7 +4,7 @@
 	<% myPCs.forEach(function(player) { %>
 		<li>
 			<a href="<%= player.href %>">
-				<img src="<%= player.image %>">
+				<img src="<%= player.img %>">
 				<span><%= player.name %></span>
 			<a>
 		</li>
@@ -22,9 +22,6 @@
 		<div class="clear"></div>
 		<input id="race" name="race" type="text">
 		Race
-		<div class="clear"></div>
-		<input id="image" name="image" type="file">
-		Image
 		<div class="clear"></div>
 		<input id="submit" name="submit" type="submit">
 	</form>
