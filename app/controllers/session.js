@@ -53,9 +53,9 @@ gh.get("/session", function() {
   var self = this;
   client.hgetall("sessions", function(e, result) {
     sys.puts("got this result from hgetall sessions: " + result);    
-    //util.inspect(result);
+    util.inspect(result);
     
-    if (!result) {result = []}
+    result = result? result : [];
       
     var displayResult = [];
     var i = 0;
@@ -67,11 +67,11 @@ gh.get("/session", function() {
       displayResult[i++].id = k;
     });
     
-    
+    //TODO: find the active sessions with users in them
     var activeSessions = [
       {"name" : "There are no active sessions. Maybe you should create one?",
       "href" : "/session/create"}
-    ]
+    ];
     
     self.model['activeSessions'] = activeSessions;
     
@@ -172,7 +172,7 @@ gh.post("/session/start/{name}", function(args) {
     self.renderText(resMsg);
   }
   
-  //todo: check that this session is not ALREADY in progess
+  //TODO: check that this session is not ALREADY in progess
   exports.initSession(name, initializedCallback);
 });
 
@@ -183,7 +183,7 @@ gh.get("/session/edit/{id}", function(args) {
       id = args.id,
       sessionId = gh.request.getCookie("uid");
   
-  if (errors.isEmpty([id])) {return exports.responses['notEnoughInfo']}
+  if (errors.isEmpty([id, sessionId])) {return exports.responses['notEnoughInfo']}
     
   //TODO: need to also return a list of maps, images for this request
   client.hmget(id, "name", "max", "pass", function(e, result) {
@@ -193,7 +193,9 @@ gh.get("/session/edit/{id}", function(args) {
     pass = result[2] ? result[2] : "none";
     var ajaxId = Math.uuid();
     
-    client.hset("cookie:" + sessionId, "ajaxId", ajaxId, function(e, result) {
+    client.hmset("cookie:" + sessionId, "ajaxId", ajaxId, function(e, result) {
+      if (e || !result) {sys.puts('error while setting ajax id for this session.');}
+      
       self.model["sid"] = ajaxId;
       self.model['name'] = name;
       self.model['max'] = max;

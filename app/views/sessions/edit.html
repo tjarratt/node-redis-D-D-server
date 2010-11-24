@@ -28,6 +28,7 @@
 				</a>
 				<span class="mapWidth" style="padding: 20px;" ></span>
 				<span class="mapHeight" style="padding: 20px;" ></span>
+				<img src="" style="visiblility:hidden"/>
 				<a class="rm" href="#" onclick="deleteThis(this); return false;">x</a>
 				<div class="file-uploader">
 					<noscript>
@@ -86,12 +87,12 @@
 		
 		function ajaxFileUpload(context) {
 			var fileInput = $(context).parent().children(":first")[0];
-		 
-      $.ajaxFileUpload({
-	      url: "/maps/" + sessid + "/upload",
+			
+			$.ajaxFileUpload({
+	      url: "/maps/" + $(fileInput).parent().attr("id") + "/upload",
 	      secureuri: false,
 	      fileElementId: $(fileInput).attr("id"),
-	      dataType: "json",
+	      dataType: "text",
 			  type: "POST",
 				beforeSend: function() {
 					$("#loading").show();
@@ -99,15 +100,17 @@
 				complete: function() {
 					$("#loading").hide();
 				},              
-				success: function(data, status) {
-					if(typeof(data.error) != "undefined") {
-						if(data.error != "") {
-							alert(data.error);
+				success: function(result, status) {
+					if(typeof(result.error) != "undefined") {
+						if(result.error != "") {
+							alert(result.error);
 						}
 						else {
-							alert(data.msg);
+							alert(result.msg);
 						}
 					}
+					//result should be a uid
+					$(context).parent().parent().children("img").attr("src", "/res/img/maps/" + result).show(); 
 				},
 				error: function (data, status, e) {
 					alert(e);
@@ -155,17 +158,20 @@
 					$newMapItem.children("span.mapWidth").html(mapObj.width);
 					$newMapItem.children("span.mapHeight").html(mapObj.height);
 					$newMapItem.children("a.rm").attr("id", mapObj.id);
+					$newMapItem.children("img").attr("src", mapObj.image? mapObj.image : "");
 					
 					//need to actually retrieve a list of maps as well
-					if (mapObj.file == "null") {						
+					if (!mapObj.image || mapObj.image == "null") {						
 						var uploadHTML = "<input id=\'upload" + index + "\' type=\'file\' name=\'file\'/> <div class=\'clear\'></div>";
 						uploadHTML += "<input type=\'submit\' onclick=\'return ajaxFileUpload(this);\' value=\'Send\'>";
 						
+						$newMapItem.children("div.file-uploader").attr("id", mapObj.id);
 						$newMapItem.children("div.file-uploader").html(uploadHTML);
 					}
 					else {
 						//need an interface here to delete files
 						//probably just an a tag with an X img next to it
+						$newMapItem.children("img").show();
 						$newMapItem.children("div.file-uploader").html(mapObj.file);
 					}
 					

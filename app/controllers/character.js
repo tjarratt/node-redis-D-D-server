@@ -136,5 +136,6 @@ gh.post("/pc/{id}", function(args) {
     self.model["player"] = playerInfo;
     return self.render("pc/singleView");
   }
+  sys.puts("setting image : " + image + " for playerId : " + playerId);
   players.setPCInfo(playerId, playerInfo, renderCallback);
 });

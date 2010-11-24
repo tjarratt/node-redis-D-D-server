@@ -36,12 +36,14 @@ gh.get("/maps/{id}", function(args) {
           //this is a bad map
           return;
         }
-        client.hmget(mapKey, "name", "width", "height", function(e, thisMap) {
+        client.hmget(mapKey, "name", "width", "height", "image", function(e, thisMap) {
+          util.inspect(thisMap);
+          
           var map = {name: thisMap[0].toString('utf8'),
                     width: thisMap[1].toString('utf8'),
                     height: thisMap[2].toString('utf8'),
                     id: mapKey,
-                    file: "null",
+                    image: util.hashResultMaybe(thisMap, 3),
                     };
 
           total--;
@@ -115,11 +117,13 @@ gh.post("/maps/new", function(args) {
     client.hmget("cookie:" + cookieId, "username", "ajaxId", function(e, result) {
       var username = util.hashResultMaybe(result, 0);
       var realAjaxId = util.hashResultMaybe(result, 1);
-      sys.puts(username);
-      sys.puts(realAjaxId);
+
+      //this isn't working because the code that sets the ajax ID is running several times for a single render
       if (realAjaxId != ajaxId) {
-        sys.puts("bad ajax id for this user");
-        return self.renderText("false");
+        sys.puts("bad ajax id for: " + username);
+        sys.puts("real: " + realAjaxId);
+        sys.puts("supplied: " + ajaxId);
+        //return self.renderText("false");
       }
       
       //confirm session exists
@@ -147,7 +151,8 @@ gh.post("/maps/new", function(args) {
       				'</a>' +
       				'<span class="mapWidth" style="padding: 20px;" >' + width + '</span>' +
       				'<span class="mapHeight" style="padding: 20px;" >' + height + '</span>' +
-      				'<a class="rm" id="' + newUUID + '" href="#" onclick="deleteThis(this); return false;">x</a>'
+      				'<img src="/" style="visibility: hidden"/>' + 
+      				'<a class="rm" id="' + newUUID + '" href="#" onclick="deleteThis(this); return false;">x</a>' + 
       				'<div class="file-uploader">' +
                 '<input id=\'upload" + index + "\' type=\'file\' name=\'file\'/> <div class=\'clear\'></div>' + 
     						'<input type=\'submit\' onclick=\'return ajaxFileUpload(this);\' value=\'Send\'>' + 
@@ -192,8 +197,7 @@ gh.post("/maps/{id}/upload", function(args) {
   var self = this;
   var id = args.id;
   
-  sys.puts("params");
-  util.inspect(this.params);
+  sys.puts("uploading an image for mapId: " + id);
   
   var fileObj = this.params['file'];
   var file = fileObj.path;
@@ -203,19 +207,16 @@ gh.post("/maps/{id}/upload", function(args) {
     return this.renderText("Missing some data. " + [id, file]);
   }
     
-  var mapId = Math.uuid();
-  var newName = "/nodeUploads/" + mapId;
-  sys.puts("created map at path: " + newName);
+  var newName = __dirname + "/../../res/img/maps/" + id;
+  sys.puts("creating map image at path: " + newName);
   
   exec('cp ' + file + " " + newName, function(error, stdout, stderr) {
     if (error !== null) {
       return sys.puts('exec error: ' + error);
     }
-    sys.puts("copied over file to more permanent filesystem");
-    sys.puts("stdout:" + stdout);
-    sys.puts("stderr:" + stderr);
+    sys.puts("copied over file to filesystem");
     
-    client.hmset(id, mapId + "mapPath", newName, function(e, result) {
+    client.hset(id, "image", "/res/img/maps/" + id, function(e, result) {
       //need to check if we actually can write to redis -- might want to kill that image otherwise
       if (e) {
         self.renderText("whoops, redis didn't like this... deleting image");
@@ -223,7 +224,7 @@ gh.post("/maps/{id}/upload", function(args) {
       }
       sys.puts("saved image to disk and redis");
       
-      self.renderText("true");
+      self.renderText(id);
     });
   });
 });

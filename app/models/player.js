@@ -71,6 +71,7 @@ exports.getPCInfo = function(pcID, callback) {
     var owner = util.hashResultMaybe(playerInfo, "owner");
     var _class = util.hashResultMaybe(playerInfo, "_class");
     var img = util.hashResultMaybe(playerInfo, "image");
+    sys.puts("got image : " + img + " for pcId" + pcID);
     
     return callback({'name': name, 
             "race": race,

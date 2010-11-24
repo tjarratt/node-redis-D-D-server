@@ -10,6 +10,9 @@ var util = require('./util/util');
 var json = JSON.stringify;
 
 var redisClient = require("./lib/redis-client").createClient();
+                   
+//configure this now so we have this later
+__appRoot = __dirname
 
 //clean up anything from before we last shut down
 //TODO: mark all dnd sessions as inactive
