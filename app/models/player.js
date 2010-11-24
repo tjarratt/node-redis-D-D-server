@@ -43,10 +43,10 @@ exports.findUsersCharacters = function(userId, callback) {
     
     _.each(pcIDlist, function(pcId, index, list) {
       sys.puts("getting info for pc w/ Id:" + pcId);
-      client.hmget("pc:" + pcId, "name", "img", function(e, playerInfo) {
+      client.hmget("pc:" + pcId, "name", "image", function(e, playerInfo) {
         var name = util.hashResultMaybe(playerInfo, 0);
         var image = util.hashResultMaybe(playerInfo, 1);
-        image = image ? image : "/res/img/Tokens.png";
+        image = image ? "/res/img/" + image + ".png" : "/res/img/Tokens.png";
         
         sys.puts(pcId + ": is " + name + " with image " + image);
         

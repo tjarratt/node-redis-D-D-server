@@ -132,9 +132,7 @@ gh.post("/pc/{id}", function(args) {
   
   var playerInfo = {"name" : name, "race" : race, "_class": _class, "image" : image};
   var renderCallback = function(result) {
-    self.model["result"] = result? true: false;
-    self.model["player"] = playerInfo;
-    return self.render("pc/singleView");
+    return self.redirect("/pc/" + playerId);
   }
   sys.puts("setting image : " + image + " for playerId : " + playerId);
   players.setPCInfo(playerId, playerInfo, renderCallback);

@@ -10,10 +10,10 @@
 		<input id="race" name="race" value="<%= player.race %>" type="text">
 		Race
 		<div class="clear"></div>
-		<input type="radio" name="image" value="Tokens" /> <img src="/res/img/Tokens.png">
-		<input type="radio" name="image" value="Tokens4" /> <img src="/res/img/Tokens4.png">
-		<input type="radio" name="image" value="Tokens5" /> <img src="/res/img/Tokens5.png">
-		<input type="radio" name="image" value="Tokens6" /> <img src="/res/img/Tokens6.png">
+		<input type="radio" name="image" "<%= player.image == 'Tokens' ? "checked='true'" : '' %>" value="Tokens" /> <img src="/res/img/Tokens.png">
+		<input type="radio" name="image" "<%= player.image == 'Tokens4' ? "checked='true'" : '' %>" value="Tokens4" /> <img src="/res/img/Tokens4.png">
+		<input type="radio" name="image" "<%= player.image == 'Tokens5' ? "checked='true'" : '' %>" value="Tokens5" /> <img src="/res/img/Tokens5.png">
+		<input type="radio" name="image" "<%= player.image == 'Tokens6' ? "checked='true'" : '' %>" value="Tokens6" /> <img src="/res/img/Tokens6.png">
 		<div class="clear"></div>
 		<input id="submit" name="submit" type="submit">
 	</form>

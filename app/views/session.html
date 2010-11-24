@@ -1,5 +1,16 @@
 <h2><%= display %></h2>
-
+<div class="clear"></div>
+<h3>Sessions You've Created</h3>
+<ul>
+	<% mySessions.forEach(function(session) { %>
+		<li>
+			<span><%= session.name %></span>
+			<form method="POST" action="/session/start/<%= session.id %>">
+				<input type="button" value="Start This Session" />
+			</form>
+		</li>
+	<% }); %>
+</ul>
 <div class="clear"></div>
 <h3>Active Sessions</h3>
 <ul>

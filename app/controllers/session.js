@@ -54,7 +54,6 @@ gh.get("/session", function() {
   client.hgetall("sessions", function(e, result) {
     sys.puts("got this result from hgetall sessions: " + result);    
     util.inspect(result);
-    
     result = result? result : [];
       
     var displayResult = [];
@@ -73,8 +72,11 @@ gh.get("/session", function() {
       "href" : "/session/create"}
     ];
     
-    self.model['activeSessions'] = activeSessions;
+    //find sessions this user owns
+    var thisUsersSessions = [];
     
+    self.model['activeSessions'] = activeSessions;
+    self.model["mySessions"] = thisUsersSessions;
     self.model['sessions'] = displayResult;
     self.render("session");
     
