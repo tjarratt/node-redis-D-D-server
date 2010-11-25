@@ -1,6 +1,7 @@
 var sys = require('sys');
 var util = require('../../util/util');
 require("../../lib/uuid");
+var users = require("../models/user");
 
 var redis = require("../../lib/redis-client");
 var client = redis.createClient();
@@ -119,32 +120,42 @@ gh.post("/session/create", function(args) {
   var name = this.params['name'],
       max = this.params['maxPlayer'],
       pass = this.params['password'];
-      id = Math.uuid();      
-  
-  if (errors.isEmpty([name, max])) {
-    this.renderText("Name and Max # of players are required fields.");
-    return;
+      id = Math.uuid(),
+      sessionId = gh.request.getCookie("uid");
+      
+  var gotSessionCallback = function(userInfo) {
+    if (!userInfo || !userInfo.userName) {
+      return self.renderText("Auth failure.");
+    }
+    var username = userInfo.userName;
+    
+    if (errors.isEmpty([name, max])) {
+      this.renderText("Name and Max # of players are required fields.");
+      return;
+    }
+
+    var self = this;
+
+    client.hset("sessions", id, name, function(e, result) {
+      if (e) { return self.renderText(exports.responses['sessionStorageError']);}
+
+      client.hmset(id, "name", name, "id", id, "max", max, "pass", pass, "owner", username, function(e, res) {
+         if (e) {
+           //failed to write session data, rrrrroll back
+           sys.puts("wrote sessionID, but no data. Welp.");
+           client.hdel("sessions", id, function(e, r) {
+              self.model['display'] = exports.responses['sessionStorageError'];
+              self.render("session");
+
+              return;
+             });
+         }
+         self.renderText(exports.responses['sessionCreated']);
+      });
+    });
   }
   
-  var self = this;
-    
-  client.hset("sessions", id, name, function(e, result) {
-    if (e) { return self.renderText(exports.responses['sessionStorageError']);}
-    
-    client.hmset(id, "name", name, "id", id, "max", max, "pass", pass, function(e, res) {
-       if (e) {
-         //failed to write session data, rrrrroll back
-         sys.puts("wrote sessionID, but no data. Welp.");
-         client.hdel("sessions", id, function(e, r) {
-            self.model['display'] = exports.responses['sessionStorageError'];
-            self.render("session");
-            
-            return;
-           });
-       }
-       self.renderText(exports.responses['sessionCreated']);
-    });
-  });
+  users.getUserBygetUserByCookieId(sessionId, gotSessionCallback);
   
 });
   
