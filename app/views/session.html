@@ -5,9 +5,7 @@
 	<% mySessions.forEach(function(session) { %>
 		<li>
 			<span><%= session.name %></span>
-			<form method="POST" action="/session/start/<%= session.id %>">
-				<input type="button" value="Start This Session" />
-			</form>
+			<%= session.form %>
 		</li>
 	<% }); %>
 </ul>

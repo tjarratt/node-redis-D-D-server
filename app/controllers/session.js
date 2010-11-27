@@ -2,87 +2,105 @@ var sys = require('sys');
 var util = require('../../util/util');
 require("../../lib/uuid");
 var users = require("../models/user");
-
 var redis = require("../../lib/redis-client");
 var client = redis.createClient();
-
 var errors = require('../../util/err');
 
 require("../../lib/underscore-min")
-
 var gh = require('grasshopper');
 
-exports.responses = {
-  'sessionStorageError' : [500, "An error occurred while processing your request."],
-  'sessionNotFound' : [403, 'No session was found'],
-  'sessionInitOkay' : [301, "Your session has been started with id:"],
-  'sessionCreated' : [200, "Your session has been successfully created."],
-  'notEnoughInfo' : [400, "You did not supply enough information for this request."]
-}
-
 exports.initSession = function(id, callback) {
-	client.hget("sessions", id, function(e, result) {
-		if (e) {callback(exports.responses['sessionStorageError']); return false;}
-		
-		if (!result) {callback(exports.responses['sessionNotFound']); return false;}
-		                                  
-    //TODO: add this information to the result hash from redis
-		var sessionData = {'players': []};
-		
-		client.hset("activeSessions", id, sessionData, function(e, result) {
-			if (e) {callback(exports.responses['sessionStorageError']); return false;}
-			
-			var receivedMessageCallback = function(result, args) {
-				sys.puts("got result: " + result + " and args? " + args);
-			}
-			
-			client.subscribeTo("active:" + id, receivedMessageCallback);
-			
-			callback(exports.responses['sessionInitOkay']);
-		});
-	});
+	//confirm session exists
+  client.hget(id, "isActive" function(e, activeState) {
+  	//set session state == active
+    if (e || !sessionInfo) {return callback(false);}
+    activeState = activeState == "true"? true : false;
+    if (activeState) {return callback(false);}
+    client.hset(id, "isActive", "true", function(e, result) {
+      if (e || !result) {return callback(false);}
+      callback(true);
+    });
+  });
 }
 
+/*
+Several things we want to show here
+A list of sessions owned by the user
+A list of active sessions you could join
+A list of all sessions (why not?)
+*/
 gh.get("/session", function() {
+  var self = this;
   this.disableCache();
   
-  this.model['display'] = "How about a nice game of global thermonuclear war?"
+  var gotUserSessionCallback = function(userInfo) {
+    var userName = userInfo.userName;
+    sys.puts(userName + " is viewing this page");
+    self.model['display'] = "How about a nice game of global thermonuclear war?"
   
-  //TODO: add a view, populate a list of active sessions from a model
-  //TODOTODO: it would be nice to password protect these eventually, right?
-  //          actually maybe not? we should still list them here
-  var self = this;
-  client.hgetall("sessions", function(e, result) {
-    sys.puts("got this result from hgetall sessions: " + result);    
-    util.inspect(result);
-    result = result? result : [];
+    //TODOTODO: it would be nice to password protect these eventually, right?
+    //          actually maybe not? we should still list them here
+    client.hgetall("sessions", function(e, result) {
+      var sessions = result? result : [];
+    
+      var activeSessions = [];
+      var thisUsersSessions = [];
       
-    var displayResult = [];
-    var i = 0;
-    _.each(result, function(v, k, l) {
-      //sys.puts("looping over list with key: " + k + " and value: " + v);
+      var displayResult = [];
+      var i = 0;
+      var sessionsToDisplay = _.keys(sessions).length;
+      var renderSessions = function() {
+        if (activeSessions.length == 0) {
+          activeSessions = [{"name" : "There are no active sessions. Maybe you should create one?","href" : "/session/create"}];
+        }
+        if (thisUsersSessions.length == 0) {
+          var emptyForm = "";
+          thisUsersSessions = [{"name": "You do not own any sessions", "form" : emptyForm}];
+        }
       
-      displayResult[i] = new Object;
-      displayResult[i].name = v;
-      displayResult[i++].id = k;
+        self.model['activeSessions'] = activeSessions;
+        self.model["mySessions"] = thisUsersSessions;
+        self.model['sessions'] = displayResult;
+        self.render("session");
+      }
+    
+      var gotSessionDetails = function(e, sessionInfo) {
+        if (e || !sessionInfo) {
+          sessionsToDisplay--;
+          return sessionsToDisplay <= 0? renderSessions() : false;
+        }
+        //pull interesting values out of the result
+        var owner = util.hashResultMaybe(sessionInfo, "owner"),
+            active = util.hashResultMaybe(sessionInfo, "isActive"),
+            name = util.hashResultMaybe(sessionInfo, "name"),
+            id = util.hashResultMaybe(sessionInfo, "id");
+      
+        active = active == "true" ? true : false;
+        if (owner == userName) {
+          var form = '<form method="POST" action="/session/start/' + id + '">' +
+    				'<input type="submit" value="Start This Session" />' +
+    			'</form>';
+          thisUsersSessions.push({"name": name, "form" : form});
+        }
+        if (active) {activeSessions.push({"name" : name, "href": "/join/" + id});}
+        sessionsToDisplay--;
+      
+        if (sessionsToDisplay <= 0) {
+          return renderSessions();
+        }
+      }
+    
+      //value, key, list
+      _.each(sessions, function(name, id, list) {
+        displayResult[i] = new Object;
+        displayResult[i].name = name;
+        displayResult[i++].id = id;
+      
+        client.hgetall(id, gotSessionDetails);
+      });
     });
-    
-    //TODO: find the active sessions with users in them
-    var activeSessions = [
-      {"name" : "There are no active sessions. Maybe you should create one?",
-      "href" : "/session/create"}
-    ];
-    
-    //find sessions this user owns
-    var thisUsersSessions = [];
-    
-    self.model['activeSessions'] = activeSessions;
-    self.model["mySessions"] = thisUsersSessions;
-    self.model['sessions'] = displayResult;
-    self.render("session");
-    
-  });
-  
+  }
+  users.getUserByCookieId(gh.request.getCookie("uid"), gotUserSessionCallback);
 });
 
 gh.get("/session/delete", function() {
@@ -169,23 +187,20 @@ gh.post("/session/create", function(args) {
   an unfortunate limitation is that should the listener callback die, our published messages will no longer work
   Will this be an issue? Only time will tell...
 */
-gh.post("/session/start/{name}", function(args) {
-  var id = Math.uuid();
-  this.model['name'] = args.name;
-  this.model['id'] = id;
+gh.post("/session/start/{id}", function(args) {
+  this.model['id'] = args.id;
                   
   //stash this away so we can render a view when ready
   var self = this;
-  
   var initializedCallback = function(response) {
-    var resCode = response[0];
-    var resMsg = response[1] + id;
+    if (!response) {
+      self.renderText("error while starting session.");
+    }
     
     sys.puts("initialized session: " + resMsg);
-    self.renderText(resMsg);
+    self.redirect("/join/" + id);
   }
   
-  //TODO: check that this session is not ALREADY in progess
   exports.initSession(name, initializedCallback);
 });
 

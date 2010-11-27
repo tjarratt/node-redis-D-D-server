@@ -30,7 +30,7 @@ gh.get("/join/{id}", function(args) {
   
   sys.puts("user with cookie:" + sessionId + " attempting to join room:" + id);
   
-  //get user session data
+  //get user session data TODO: replace this with users.getUserByCookieId
   client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
     if (e || !result || !result.length || result.length < 1 || result[0] == null) {
       return self.renderText("Have you ever been authenticated?");
@@ -41,8 +41,13 @@ gh.get("/join/{id}", function(args) {
     if (errors.isEmpty([thisUser, id, imageName])) {return self.renderText(responses['noUserError'])}
   
     //make sure this is an existing, active session
-    client.hexists("active", id, function(e, result) {
-      if (e || result != true) {return self.renderText(responses['idInactiveError'])}
+    client.hmget(id, "isActive", "owner", function(e, result) {
+      if (e || !result) {return self.renderText(responses['idInactiveError']);}
+      var isActive = util.hashResultMaybe(result, "isActive");
+      isActive = isActive == "true" ? true : false;
+      if (!isActive) {return self.renderText(resposnes['idInactiveError']);}
+      
+      var owner = util.hashResultMaybe(result, "owner");
     
       //the sockets hash will hold all current users by websocketId, and a reference to the room they are currently in 
       client.hmset("users:" + sessionId, "room", id, "name", thisUser, "defaultImage", imageName, function(e, result) {
@@ -87,7 +92,8 @@ gh.get("/join/{id}", function(args) {
             return self.render("room");
           }
         
-          //in most browsers it should be safe to do this, but we might also consider storing this count in redis, since operations there can be atomic
+          //user is not DM, we need to set this up so they can see other users
+          //might be possible to push this off to an API call later
           _.each(users, function(socketid, index) {
             //get info from redis
             client.hget("sockets", socketid, function(e, userId) {
