@@ -121,6 +121,8 @@ var StartSocket = function() {
     	      return false;
     	    }
     	    
+    	    //TODO: check if this user had already joined, in which case we need to update, and then do nothing
+    	    
     	    redisClient.hset("sockets", webSocketId, id, function(e, result) {
     	      sys.puts("set id, getting info for key:" + id);
     	      if (e || !result) {
@@ -186,7 +188,7 @@ var StartSocket = function() {
         	  }
         	  else if (message.indexOf("_update") >= 0) {
         	    var itemToUpdate = message.substring(message.lastIndexOf(":") + 1, message.lenth);
-        	    sys.puts("received update for :" + itemToUpdate);
+        	    sys.puts("received update for:" + itemToUpdate);
         	    msg = {};
         	    msg[itemToUpdate] = [name, true];
         	    bufferMsgToReplace = itemToUpdate;

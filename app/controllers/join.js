@@ -66,7 +66,7 @@ gh.get("/join/{id}", function(args) {
         
           var players = [thisPlayer]
         
-          if (users.length <= 0) {
+          if (users.length <= 0 || owner == thisUser) {
             self.model['players'] = players;
             self.model['display'] = responses['joinSuccess'];
             self.model['listenId'] = id;
@@ -85,6 +85,7 @@ gh.get("/join/{id}", function(args) {
             	'<input type="button" id="tool_shadow" src="/res/img/palette/shadow.png"/>' + 
             	'<input type="button" id="tool_erase" src="/res/img/palette/erase.png"/>' + 
             	'<input type="button" id="tool_wipe" src="/res/img/palette/wipe.png" />' + 
+            	'<input type="button" id="tool_move" src="/res/img/palette/pointer.png" />' +
             	'<div id="red"></div>' +
             	'<div id="blue"></div>' +
             	'<div id="green"></div>' +
