@@ -11,7 +11,7 @@ var gh = require('grasshopper');
 
 exports.initSession = function(id, callback) {
 	//confirm session exists
-  client.hget(id, "isActive" function(e, activeState) {
+  client.hget(id, "isActive", function(e, activeState) {
   	//set session state == active
     if (e || !sessionInfo) {return callback(false);}
     activeState = activeState == "true"? true : false;

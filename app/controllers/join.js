@@ -43,11 +43,10 @@ gh.get("/join/{id}", function(args) {
     //make sure this is an existing, active session
     client.hmget(id, "isActive", "owner", function(e, result) {
       if (e || !result) {return self.renderText(responses['idInactiveError']);}
-      var isActive = util.hashResultMaybe(result, "isActive");
-      isActive = isActive == "true" ? true : false;
-      if (!isActive) {return self.renderText(resposnes['idInactiveError']);}
+      var isActive = util.hashResultMaybe(result, 0);
+      if (!isActive) {return self.renderText(responses['idInactiveError']);}
       
-      var owner = util.hashResultMaybe(result, "owner");
+      var owner = util.hashResultMaybe(result, 1);
     
       //the sockets hash will hold all current users by websocketId, and a reference to the room they are currently in 
       client.hmset("users:" + sessionId, "room", id, "name", thisUser, "defaultImage", imageName, function(e, result) {
@@ -58,7 +57,11 @@ gh.get("/join/{id}", function(args) {
         client.lrange(id + "/users", 0, 10, function(e, users) {
           users = users? users.toString().split(",") : [];
           totalUsers = users.length;
-          if (! imageName.match("/res/img/")) {imageName = "/res/img/" + imageName + ".png"}
+          //shouldn't need this anymore
+          /*if (imageName.match("/res/img/") == null) {
+            sys.puts(imageName + " does not match /res/img/");
+            imageName = "/res/img/" + imageName + ".png";
+          }*/
           var thisPlayer = {name: thisUser, src: imageName}
         
           var players = [thisPlayer]
@@ -114,7 +117,8 @@ gh.get("/join/{id}", function(args) {
 
                   //that is kind of a weird way to fail
                   userName = userName? userName.toString('utf8') : "some user";
-                  imageSrc = imageSrc? "/res/img/" + imageSrc.toString('utf8') + ".png" : "/res/img/Tokens.png";
+                  imageSrc = imageSrc? imageSrc.toString('utf8') : "/res/img/Tokens.png";
+                  if (!imageSrc.match("/res/img/")) {imageSrc = "/res/img/" + imageSrc + ".png";}
                 
                   sys.puts("identified : " + userName + " with image: " + imageSrc + " " + totalUsers + " remaining to lookup.");
 
