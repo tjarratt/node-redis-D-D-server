@@ -76,20 +76,26 @@ gh.get("/join/{id}", function(args) {
             self.model['userName'] = thisUser;
             self.model['url'] = "butter3.local";
             self.model['isDM'] = true;
+            self.model["maps"] = [];
             
             //need to move this into a subview
             //adding some methods for rendering it would be nice too
             self.model["dmPaletteOrNothing"] = '<div id="dmPalette">' +
             	'<h3>Tools</h3>' + 
-            	'<input type="button" id="tool_annotate" src="/res/img/palette/annotate.png"/>' + 
-            	'<input type="button" id="tool_shadow" src="/res/img/palette/shadow.png"/>' + 
-            	'<input type="button" id="tool_erase" src="/res/img/palette/erase.png"/>' + 
-            	'<input type="button" id="tool_wipe" src="/res/img/palette/wipe.png" />' + 
-            	'<input type="button" id="tool_move" src="/res/img/palette/pointer.png" />' +
+            	'<input type="button" id="tool_annotate" >' + 
+            	'<input type="button" id="tool_shadow" >' + 
+            	'<input type="button" id="tool_erase" >' + 
+            	'<input type="button" id="tool_wipe" >' + 
+            	'<input type="button" id="tool_move" >' +
             	'<div id="red"></div>' +
             	'<div id="blue"></div>' +
             	'<div id="green"></div>' +
             	'<div id="swatch" class="ui-widget-content ui-corner-all"></div>' + 
+            '</div>' +
+            '<div class="clear"></div>' + 
+            '<h3>Maps</h3>' + 
+            '<div id="dmMaps">' + 
+            '<p id="innerMapContainer"></p>' + 
             '</div>';
 
             //get outta here!

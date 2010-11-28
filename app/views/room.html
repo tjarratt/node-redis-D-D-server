@@ -40,6 +40,7 @@
 		_userName = "<%= userName %>";
 		_url = "<%= url %>";
 		_isDM = "<%= isDM? true : false %>";
+		_maps = "<%= isDM? maps : [] %";
 		
 		$(document).ready(initRoom);
 	</script>
@@ -91,6 +92,11 @@
 			width: 30px;
 			height: 30px;
 		}
+		input#tool_move {
+			background:url(/res/img/palette/pointer.png) no-repeat;
+			width: 30px;
+			height: 30px;
+		}
 		#red, #green, #blue {
 			float: left;
 			clear: left;
@@ -110,5 +116,11 @@
 		#green .ui-slider-handle { border-color: #8ae234; }
 		#blue .ui-slider-range { background: #729fcf; }
 		#blue .ui-slider-handle { border-color: #729fcf; }
+		/*DM map Control*/
+		div#dmMaps {
+			height : 75px;
+			width: 100px;
+			overflow-x: auto;
+		}
 	</style>
 </div>
