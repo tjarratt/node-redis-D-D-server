@@ -45,7 +45,7 @@ gh.configure({
     layout: './app/views/layout',
     
     //TODO: decide whether we need localization
-    //one potential use for this might be 
+    //one potential use for this might be an insanity effect, or flavor for a DnD game
     //locales: require('./locales')
 });
 
@@ -116,45 +116,73 @@ var StartSocket = function() {
     	    var id = message.substring(message.indexOf(":") + 1, message.length);
     	    sys.puts("setting userID: " + id + " for websocketId:" + webSocketId)
     	    
-    	    if (!(id || id.length > 5)) {
+    	    if (!(id || id.length > 10)) {
     	      //client.send(json('disconnect'));
     	      return false;
     	    }
     	    
     	    //TODO: check if this user had already joined, in which case we need to update, and then do nothing
-    	    
-    	    redisClient.hset("sockets", webSocketId, id, function(e, result) {
-    	      sys.puts("set id, getting info for key:" + id);
-    	      if (e || !result) {
-    	        sys.puts("failed to set websocket sessionId - clientId");
-    	        //client.send(json('disconnect'));
-    	        return false;
-    	      }
-    	      //get whitelist and announce that a user joined
-    	      redisClient.hmget("users:" + id, "name", "room", "defaultImage", function(e, info) {
-    	        var name = info[0].toString('utf8');
-    	        var roomId = info[1].toString('utf8');
-    	        var defaultImage = info[2].toString('utf8');
-    	        
-              sys.puts("got info for this client:");
-    	        sys.puts("name: " + name + ", room: " + roomId);
-    	        
-    	        redisClient.lrange(roomId + "/users", 0, 10, function(e, whiteList) {
-    	          //now that we've identified the user, their name + room, we can announce they joined
-    	          whiteList = whiteList? whiteList.toString().split(",") : [];
-    	          whiteList = _.without(whiteList, webSocketId);
-
-    	          sys.puts("announcing user: " + name + " joined to " + whiteList);    	          
-          	    client.broadcastOnly(json({ announcement: name + ' connected' , username: name, imageName: defaultImage}), whiteList);
-          	    
-          	    //push ourselves onto this list
-          	    redisClient.rpush(roomId + "/users", webSocketId, function(e, result) {
-          	      if (e || !result) {
-          	        //client.send(json('disconnection'));
-          	      }
-          	    });
-    	        });
+    	    //for now we can get all sockets and look for a matching id
+    	    //but really we should be storing this in the user hash ("user:id", "socketId")
+    	    redisClient.hgetall("sockets", function(e, sockets) {
+    	      sys.puts("checking to see if this is a returning user: " + id);
+    	      var isReturning = false;
+    	      sockets = sockets? sockets : [];
+    	      _.each(sockets, function(userId, socketId, list) {
+    	        sys.puts("comparing " + userId + " to " + id);
+    	        if (userId == id) {
+    	          sys.puts("bingo, removing old session, updating lists");
+    	          isReturning = true;
+    	          return false;
+    	          redisClient.hdel("sockets", socketId, function(e, result) {});//TODO: do we need to handle this error?
+    	        }
     	      });
+    	      
+    	      redisClient.hset("sockets", webSocketId, id, function(e, result) {
+      	      sys.puts("set id, getting info for key:" + id);
+      	      if (e || !result) {
+      	        sys.puts("failed to set websocket sessionId - clientId");
+      	        //client.send(json('disconnect'));
+      	        return false;
+      	      }
+      	      
+      	      //get whitelist and announce that a user joined
+      	      redisClient.hmget("users:" + id, "name", "room", "defaultImage", function(e, info) {
+      	        var name = info[0].toString('utf8');
+      	        var roomId = info[1].toString('utf8');
+      	        var defaultImage = info[2].toString('utf8');
+
+                sys.puts("got info for this client:");
+      	        sys.puts("name: " + name + ", room: " + roomId);
+      	        
+      	        if (isReturning) {
+        	        redisClient.rpush(roomId + "/users", webSocketId, function(e, result) {
+        	          if (e || !result) {
+        	            //need to handle this error in a clean way
+        	            //client.send(json("error"));
+        	            return false;
+        	          }
+        	        });
+        	        return true;
+        	      }
+
+      	        redisClient.lrange(roomId + "/users", 0, 10, function(e, whiteList) {
+      	          //now that we've identified the user, their name + room, we can announce they joined
+      	          whiteList = whiteList? whiteList.toString().split(",") : [];
+      	          whiteList = _.without(whiteList, webSocketId);
+
+      	          sys.puts("announcing user: " + name + " joined to " + whiteList);    	          
+            	    client.broadcastOnly(json({ announcement: name + ' connected' , username: name, imageName: defaultImage}), whiteList);
+
+            	    //push ourselves onto this list
+            	    redisClient.rpush(roomId + "/users", webSocketId, function(e, result) {
+            	      if (e || !result) {
+            	        //client.send(json('disconnection'));
+            	      }
+            	    });
+      	        });
+      	      });
+      	    });
     	    });
   	    }
   	    else {

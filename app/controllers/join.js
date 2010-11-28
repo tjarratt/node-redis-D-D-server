@@ -115,17 +115,25 @@ gh.get("/join/{id}", function(args) {
                   }
 
                   totalUsers--;
-
-                  //that is kind of a weird way to fail
-                  userName = userName? userName.toString('utf8') : "some user";
+                  userName = userName? userName.toString('utf8') : "some user";//that is kind of a weird way to fail
                   imageSrc = imageSrc? imageSrc.toString('utf8') : "/res/img/Tokens.png";
                   if (!imageSrc.match("/res/img/")) {imageSrc = "/res/img/" + imageSrc + ".png";}
                 
                   sys.puts("identified : " + userName + " with image: " + imageSrc + " " + totalUsers + " remaining to lookup.");
-
-                  var thisPlayer = {name: userName, src: imageSrc};
-                  players.push(thisPlayer);
-                
+                  
+                  var isDuplicate = false;
+                  _.each(players, function(playerObj, key, list) {
+                    if (playerObj.name == userName) {
+                      isDuplicate = true;
+                      return false;
+                    }
+                  });
+                  
+                  if (!isDuplicate) {
+                    var thisPlayer = {name: userName, src: imageSrc};
+                    players.push(thisPlayer);
+                  }
+                  
                   if (totalUsers <= 0) {
                     return renderRoomWithPlayers(players);
                 
