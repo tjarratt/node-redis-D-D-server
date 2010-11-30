@@ -57,7 +57,8 @@ gh.configure({
   "character",
   "map",
   "test",
-  "update"
+  "update",
+  "ajax/ajaxAPI"
 ].forEach(function(controller) {
     require("./app/controllers/" + controller);
 });

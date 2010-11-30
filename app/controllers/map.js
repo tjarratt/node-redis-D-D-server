@@ -11,7 +11,6 @@ require("../../lib/underscore-min")
 var json = JSON.stringify;
 
 var gh = require('grasshopper');
-var formidable = require("formidable");
 
 gh.get("/maps/{id}", function(args) {
   var self = this;

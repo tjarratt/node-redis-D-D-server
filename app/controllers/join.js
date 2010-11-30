@@ -52,16 +52,10 @@ gh.get("/join/{id}", function(args) {
       client.hmset("users:" + sessionId, "room", id, "name", thisUser, "defaultImage", imageName, function(e, result) {
         if (e || !result) {return self.renderText(responses['dbError'])}
       
-        //sys.puts("getting a list of existing users...");
         //get a list of the existing usernames + images
         client.lrange(id + "/users", 0, 10, function(e, users) {
           users = users? users.toString().split(",") : [];
           totalUsers = users.length;
-          //shouldn't need this anymore
-          /*if (imageName.match("/res/img/") == null) {
-            sys.puts(imageName + " does not match /res/img/");
-            imageName = "/res/img/" + imageName + ".png";
-          }*/
           var thisPlayer = {name: thisUser, src: imageName}
         
           var players = [thisPlayer]
@@ -78,7 +72,7 @@ gh.get("/join/{id}", function(args) {
             self.model['isDM'] = true;
             self.model["maps"] = [];
             
-            //need to move this into a subview
+            //TODO:need to move this into a subview
             //adding some methods for rendering it would be nice too
             self.model["dmPaletteOrNothing"] = '<div id="dmPalette">' +
             	'<h3>Tools</h3>' + 

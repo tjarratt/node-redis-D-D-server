@@ -16,7 +16,7 @@ gh.post("/update/{roomId}/annotate", function(args) {
       imgData = this.params['b64image'];
       
   //need to strip off everything before the first comma
-  //ie: "data:image/png;base64,BLAHBLAHBASE64BLAHBLAH"
+  //eg: "data:image/png;base64,BLAHBLAHBASE64BLAHBLAH"
   imgData = imgData.substring(imgData.indexOf(",") + 1, imgData.length);
   
   sys.puts("got an image for roomId: " + roomId);;
