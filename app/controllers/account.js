@@ -12,7 +12,7 @@ var gh = require('grasshopper');
 
 //init cookieJar and secret for signed cookies
 var cookie = require("cookie");
-cookie.secret = "thisIsAGoodSecret!";
+cookie.secret = "thisIsAGoodSecret!"; //TODO: set this in a file from .gitignore when deploying
 
 //possible responses emitted by this object
 exports.responses = {
