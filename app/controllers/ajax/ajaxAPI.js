@@ -33,6 +33,7 @@ require(__appRoot + "/lib/underscore-min");
       should allow for easier test writing, and reuse between web and API
     */
     
+//TODO: support for requiring SSL on controllers / actions
 exports.apiPrototype = function() {
   return {
     modelVars : {},

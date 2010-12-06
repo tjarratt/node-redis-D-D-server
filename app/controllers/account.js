@@ -9,6 +9,7 @@ var errorHandler = errors.newHandler();
 var users = require("../models/user");
 
 var gh = require('grasshopper');
+var ajaxProto = require("./ajax/ajaxAPI");
 
 //init cookieJar and secret for signed cookies
 var cookie = require("cookie");
@@ -23,6 +24,10 @@ exports.responses = {
   'accountExistsError' : {code: 409, message: "Username already exists. Please choose another name."},
   'accountNotExists' : {code: 409, message: "This user account does not exist. Maybe you should register?"},
 }
+
+this.prototype = ajaxProto.apiPrototype();
+//set up getMethods
+//set up postMethods
 
 exports.createAccount = function(username, password, callback) {
   if (errors.isEmpty([username, password])) {
@@ -47,10 +52,9 @@ exports.createAccount = function(username, password, callback) {
 			    var res = gh.response;
 			    
 			    sys.puts("writing uid, uname cookies");
-          		    res.setCookie("uid", newUID);
-  			    //res.setCookie("uname", username);
+  		    res.setCookie("uid", newUID);//TODO: change all of this to setSecureCookie and getSecureCookies
 			  
-  			    return callback(exports.responses['accountSuccess']);
+			    return callback(exports.responses['accountSuccess']);
 			  });
 		  });
 	  }

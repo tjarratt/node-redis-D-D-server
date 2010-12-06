@@ -18,6 +18,7 @@ __appRoot = __dirname
 //TODO: mark all dnd sessions as inactive
 //TODO: delete all cookie:* hashes that aren't active
 //TODO: block all the following code on this execution, callllllbaaaaacks
+//TODO: check that redis is active before we do this
 sys.puts("cleaning up old users");
 redisClient.keys("users:*", function(e, oldUsers) {
   var oldUsers = oldUsers? oldUsers.toString().split(",") : [];
@@ -36,6 +37,28 @@ redisClient.keys("users:*", function(e, oldUsers) {
     
     _.each(userLists, function(sessionListKey, index) {
       redisClient.del(sessionListKey, function(e, result) {});
+    });
+  });
+});
+sys.puts("cleaing up old maps");
+redisClient.keys("*/maps", function(e, sessionMapKeys) { //get all of the maps associated with each session
+  sessionMapKeys = sessionMapKeys? sessionMapKeys.toString().split(",") : [];
+  
+  //for each session, check that each of the maps at sessionId/maps exists 
+  _.each(sessionMapKeys, function(sessionMapKey, index) {
+    sys.puts("looking at maps for session " + sessionMapKey);
+    
+    redisClient.hgetall(sessionMapKey, function(e, sessionMaps) {
+      //check that each of these maps exists, if not then we need to remove it from this list
+      sessionMaps = sessionMaps? sessionMaps.toString().split(",") : [];
+      _.each(sessionMaps, function(mapKey, index, list) {
+        sys.puts("checking existence of key " + mapKey);
+        redisClient.hexists(mapKey, function(e, result) {
+          if (! result) {
+            redisClient.hdel(sessionMapKey, mapKey, function() {});
+          }
+        });
+      });
     });
   });
 });
@@ -60,7 +83,7 @@ gh.configure({
   "update",
   "ajax/ajaxAPI"
 ].forEach(function(controller) {
-    require("./app/controllers/" + controller);
+  require("./app/controllers/" + controller);
 });
 
 gh.get("/", function() {
@@ -71,10 +94,6 @@ gh.get("/", function() {
   this.model['message'] = "";
   
   this.render('home');
-});
-
-gh.get("/twitter", function() {
-  this.render("twitter");
 });
      
 gh.serve(8080);
