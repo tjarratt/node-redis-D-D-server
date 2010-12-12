@@ -59,7 +59,8 @@ gh.get("/pc/{id}", function(args) {
     var username = util.hashResultMaybe(result, 0);
     var defaultImage = util.hashResultMaybe(result, 1);
     if (!username) {
-      return self.renderText("Have you ever been authenticated?");
+      self.flash["message"] = "You should authenticate before trying that again.";
+      return self.redirect("/account");
     }
     var renderCallback = function(pcInfo) {
       self.model["player"] = pcInfo;
@@ -83,7 +84,8 @@ gh.post("/pc/new", function(args) {
     sys.puts("found user: " + username);
     
     if (!username) {
-      return self.renderText("Have you ever been authenticated?");
+      self.flash["message"] = "You should authenticate before trying that again.";
+      return self.redirect("/account");
     }
     
     sys.puts("params: " + self.params);
@@ -123,7 +125,8 @@ gh.post("/pc/{id}", function(args) {
       image = util.hashResultMaybe(this.params, "image");
       
   if (!sessionId) {
-    return self.renderText("Have you ever been authenticated?");
+    self.flash["message"] = "You should authenticate before trying that again.";
+    return self.redirect("/account");
   }
   if (errors.isEmpty([playerId, name, race, _class, image])) {
     return self.renderText("All fields are mandatory, broseph.");

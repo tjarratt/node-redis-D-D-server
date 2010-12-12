@@ -177,7 +177,7 @@ gh.post("/session/create", function(args) {
   
 });
   
-  //ignore the comment below, we're using websockets now, with some fallback for weaksauce browsers (prob xhr)
+  //ignore the comment below, we're using websockets now, with some fallback for weaksauce browsers (prob xhr + flash)
   
 /*
   The way this works is that we grab the name of the session, match it in redis

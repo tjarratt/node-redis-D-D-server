@@ -40,28 +40,28 @@ redisClient.keys("users:*", function(e, oldUsers) {
     });
   });
 });
-sys.puts("cleaing up old maps");
-redisClient.keys("*/maps", function(e, sessionMapKeys) { //get all of the maps associated with each session
-  sessionMapKeys = sessionMapKeys? sessionMapKeys.toString().split(",") : [];
+//sys.puts("cleaing up old maps");
+//redisClient.keys("*/maps", function(e, sessionMapKeys) { //get all of the maps associated with each session
+/*  sessionMapKeys = sessionMapKeys? sessionMapKeys.toString().split(",") : [];
   
   //for each session, check that each of the maps at sessionId/maps exists 
   _.each(sessionMapKeys, function(sessionMapKey, index) {
     sys.puts("looking at maps for session " + sessionMapKey);
     
     redisClient.hgetall(sessionMapKey, function(e, sessionMaps) {
+      util.inspect(sessionMaps)
       //check that each of these maps exists, if not then we need to remove it from this list
-      sessionMaps = sessionMaps? sessionMaps.toString().split(",") : [];
-      _.each(sessionMaps, function(mapKey, index, list) {
-        sys.puts("checking existence of key " + mapKey);
+      _.each(sessionMaps, function(mapName, mapKey, list) {
         redisClient.hexists(mapKey, function(e, result) {
           if (! result) {
+            sys.puts("deleting " + mapKey + " key from hash " + sessionMapKey);
             redisClient.hdel(sessionMapKey, mapKey, function() {});
           }
         });
       });
     });
   });
-});
+});*/
 
 gh.configure({
     viewsDir: './app/views',
@@ -112,6 +112,7 @@ var StartSocket = function() {
     overriding the websocket sessionId would require hacking apart the client + server libraries, when I'm not up to yet
   */
   socket.on('connection', function(client){
+    util.inspect(client);
   	client.send(json({ buffer: buffer }));
   	client.on('message', function(message){
   	  sys.puts("got message: " + message + " from: " + client.sessionId);

@@ -137,7 +137,10 @@ gh.post("/account/image", function(args) {
       image = util.hashResultMaybe(this.params, "image"),
   image = image? "/res/img/" + image + ".png" : false;
   
-  if (!sessionId) {return this.renderText("Have you ever been authenticated?");}
+  if (!sessionId) {
+    self.flash["message"] = "You should authenticate before trying that again.";
+    return self.redirect("/account");
+  }
   if (!image) {return this.renderText("Did you submit an image or nothing at all?");}
   
   var updatedImageCallback = function(result) {
@@ -161,7 +164,10 @@ gh.post("/account/image/custom", function(args) {
       
   sys.puts("got user with sessionId: " + sessionId + " trying to upload an image: " + image);
       
-  if (!sessionId) {return this.renderText("Have you ever been authenticated?");}
+  if (!sessionId) {
+    self.flash["message"] = "You should authenticate before trying that again.";
+    return self.redirect("/account");
+  }
   if (!image) {return self.renderText("gotta submit an image, with the request, dude.");}
   
   //get image req

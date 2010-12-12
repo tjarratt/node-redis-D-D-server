@@ -1,4 +1,7 @@
 <h2>Login</h2>
+<% if(flash['message']) { %>
+    <p ><%= flash['message'] %></p>
+<% } %>
 <div id="loginContainer">
 	<form name="login" method="POST" action="/account/login">
 		<input id="user" name="user" type="text" />

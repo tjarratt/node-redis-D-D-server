@@ -24,8 +24,25 @@
 <div id="players">
 	<h3>Players</h3>
 	<% players.forEach(function(player) { %>
-		<img src="<%= player.src %>" id="player_<%= player.name %>">
+		<div class="playerBlock">
+			<img class="playerImg" src="<%= player.src %>" id="player_<%= player.name %>">
+			<div id="<%=player.name %>">
+				<div class="innerChat">
+					<a href="#" class="chatLink" id="<%= player.name %>">
+						<%= player.name %>
+					</a>
+				</div>
+			</div>
+		</div>
 	<% }); %>
+</div>
+<div>
+	<div id="privateChat">
+		<p>Connecting</p>
+	</div>
+	<form id="privateForm">
+		<input type="text" autocomplete="off" id="privateInput"><input type="submit" value="Send">
+	</form>
 </div>
 <div>
 	<script src="/lib/room.js" language="javascript"></script>
@@ -39,12 +56,14 @@
 		_image = "<%= imageName %>";
 		_userName = "<%= userName %>";
 		_url = "<%= url %>";
-		_isDM = "<%= isDM? true : false %>";
-		_maps = "<%= isDM? maps : [] %";
+		_isDM = <%= isDM? true : false %>;
 		
 		$(document).ready(initRoom);
 	</script>
 	<style>
+		div.innerChat {
+			width: 20px;
+		}
 		div#canvasContainer {
 			position: relative;
 			top:-368px;
@@ -72,6 +91,16 @@
 		}
 		input#text {
 			width: 400px!important;
+		}
+		div#privateChat {
+			width:500px;
+			height:100px;
+		}
+		input#privateInput {
+			width: 500px!important;
+		}
+		form#privateForm {
+			width: 482px;
 		}
 		input#tool_annotate {
 			background:url(/res/img/palette/annotate.png) no-repeat;
@@ -122,6 +151,9 @@
 			height : 75px;
 			width: 100px;
 			overflow-x: auto;
+		}
+		div.playerBlock {
+			width: 55px; float: left
 		}
 	</style>
 </div>

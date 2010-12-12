@@ -13,7 +13,7 @@ var cookie = require('cookie');
 
 responses = {
   'idInactiveError' : "This session is not active right now.",
-  'joinSuccess' : "Let's get ready to roll some dice!",
+  'joinSuccess' : "",
   "noUserError" : "Client error: no user specified",
   'dbError' : "Database error."
 }
@@ -33,7 +33,8 @@ gh.get("/join/{id}", function(args) {
   //get user session data TODO: replace this with users.getUserByCookieId
   client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
     if (e || !result || !result.length || result.length < 1 || result[0] == null) {
-      return self.renderText("Have you ever been authenticated?");
+      self.flash["message"] = "You should authenticate before trying that again.";
+      return self.redirect("/account");
     }
     var thisUser = result[0].toString('utf8');
     var imageName = result[1]? result[1].toString('utf8') : "Tokens";
@@ -55,7 +56,7 @@ gh.get("/join/{id}", function(args) {
         //get a list of the existing usernames + images
         client.lrange(id + "/users", 0, 10, function(e, users) {
           users = users? users.toString().split(",") : [];
-          totalUsers = users.length;
+          var totalUsers = users.length;
           var thisPlayer = {name: thisUser, src: imageName}
         
           var players = [thisPlayer]
@@ -70,7 +71,6 @@ gh.get("/join/{id}", function(args) {
             self.model['userName'] = thisUser;
             self.model['url'] = "butter3.local";
             self.model['isDM'] = true;
-            self.model["maps"] = [];
             
             //TODO:need to move this into a subview
             //adding some methods for rendering it would be nice too
