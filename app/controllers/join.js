@@ -81,9 +81,7 @@ gh.get("/join/{id}", function(args) {
             	'<input type="button" id="tool_erase" >' + 
             	'<input type="button" id="tool_wipe" >' + 
             	'<input type="button" id="tool_move" >' +
-            	'<div id="red"></div>' +
-            	'<div id="blue"></div>' +
-            	'<div id="green"></div>' +
+            	'<canvas id="annotateColor" width="100" height="101"></canvas>' + 
             	'<div id="swatch" class="ui-widget-content ui-corner-all"></div>' + 
             '</div>' +
             '<div class="clear"></div>' + 
