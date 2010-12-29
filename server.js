@@ -13,7 +13,7 @@ try {
   var redisClient = require("./lib/redis-client").createClient();
 }
 catch (e) {
-  sys.puts("could not start server, suspect npm packages not installed};
+  sys.puts("could not start server, suspect npm packages not installed");
   return;
 }
                    
