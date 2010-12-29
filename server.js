@@ -1,15 +1,21 @@
-var sys = require('sys');
+try {
+  var sys = require('sys');
 
-var errorHandler = require("./util/err"); 
-var gh = require('grasshopper');
-var io = require("socket.io");
+  var errorHandler = require("./util/err"); 
+  var gh = require('grasshopper');
+  var io = require("socket.io");
 
-var cookie = require("cookie");
+  var cookie = require("cookie");
 
-var util = require('./util/util');
-var json = JSON.stringify;
+  var util = require('./util/util');
+  var json = JSON.stringify;
 
-var redisClient = require("./lib/redis-client").createClient();
+  var redisClient = require("./lib/redis-client").createClient();
+}
+catch (e) {
+  sys.puts("could not start server, suspect npm packages not installed};
+  return;
+}
                    
 //configure this now so we have this later
 __appRoot = __dirname
