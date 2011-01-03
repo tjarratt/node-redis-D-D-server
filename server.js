@@ -364,7 +364,8 @@ var tryStart = function() {
     sys.log("gh not started yet, waiting for nextTick to start socket server.");
     
     //would probably be more effective to just listen for an event that GH could emit when it's done starting up
-    return process.nextTick(tryStart);
+    return setTimeout(tryStart, 3000); //Fix to avoid pegging the cpu when this is failing repeatedly
+                                       //this originally just called tryStart on nextTick, which really hurts an awful lot
   }
   StartSocket();
 }
