@@ -1,14 +1,11 @@
 var sys = require('sys'),
-    expressApp = _app;
-
-//var client = require("../../lib/redis-client").createClient();
-//switching to node_redis, since node-redis-client doesn't support newer node required for NPM goodness
-var client = require("redis").createClient(),
-var errors = require('../../util/err');
-var util = require('../../util/util');
-var errorHandler = errors.newHandler();
-var users = require("../models/user");
-var ajaxProto = require("./ajax/ajaxAPI");
+    expressApp = _app,
+    client = require("redis").createClient(),
+    errors = require('../../util/err'),
+    util = require('../../util/util'),
+    errorHandler = errors.newHandler(),
+    users = require("../models/user"),
+    ajaxProto = require("./ajax/ajaxAPI");
 
 //init cookieJar and secret for signed cookies
 var cookie = require("cookie");

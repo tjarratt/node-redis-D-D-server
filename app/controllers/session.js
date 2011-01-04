@@ -242,5 +242,6 @@ app.post("/session/delete/:id", function(req, res) {
   
   client.hdel("sessions", sessionId, function(e, result) {
     sys.puts("deleted sessionId: " + sessionId);
+    callback(e? false : true);
   });
 })
