@@ -3,7 +3,7 @@ var sys = require('sys'),
 
 //var client = require("../../lib/redis-client").createClient();
 //switching to node_redis, since node-redis-client doesn't support newer node required for NPM goodness
-var client = require("redis").createClient();
+var client = require("redis").createClient(),
 var errors = require('../../util/err');
 var util = require('../../util/util');
 var errorHandler = errors.newHandler();
@@ -49,7 +49,7 @@ exports.createAccount = function(username, password, callback, res) {
 			  
 			  client.hset("cookie:" + newUID, "username", username, function(e, result) {
 			    sys.puts("writing uid, uname cookies");
-  		    res.setCookie("uid", newUID);//TODO: change all of this to setSecureCookie and getSecureCookies
+  		    res.setCookie("uid", newUID,  {path: "/"});//TODO: change all of this to setSecureCookie and getSecureCookies
 			  
 			    return callback(exports.responses['accountSuccess']);
 			  });
@@ -93,7 +93,7 @@ exports.Login = function(username, password, callback, res) {
           var newUID = Math.uuid();
 
   			  client.hset("cookie:" + newUID, "username", username, function(e, result) {
-  			    var options = {path: "/"}
+  			    var options = {path: "/"};
   			                 
   			    sys.puts("setting id:" + newUID + " for user:" + username);
     			  //res.setCookie("uname", username, options);

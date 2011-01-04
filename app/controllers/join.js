@@ -2,7 +2,7 @@ var sys = require('sys'),
     app = _app,
     util = require('../../util/util'),
     errors = require('../../util/err'),
-    client = require('../../lib/redis-client').createClient(),
+    client = require("redis").createClient(),
     errors = require('../../util/err'),
     cookie = require('cookie');
 
