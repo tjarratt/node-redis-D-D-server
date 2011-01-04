@@ -1,19 +1,16 @@
 var sys = require("sys");
-var fs = require("fs");//need this to create a writeable stream 
-var util = require('../../util/util');
-require("../../lib/uuid");
+    fs = require("fs"), //need this to create a writeable stream 
+    util = require('../../util/util'),
+    app = _app,
+    errors = require('../../util/err'),
+    exec = require('child_process').exec;//shell scripts woo
 
-var errors = require('../../util/err');
+require("../../lib/uuid");
 require("../../lib/underscore-min");
 
-var exec = require('child_process').exec;//shell scripts woo
-
-var gh = require("grasshopper");
-
-gh.post("/update/{roomId}/annotate", function(args) {
-  var self = this,
-      roomId = args.roomId,
-      imgData = this.params['b64image'];
+app.post("/update/:roomId/annotate", function(request, response) {
+  var roomId = request.params.roomId,
+      imgData = request.body.b64image;
       
   //need to strip off everything before the first comma
   //eg: "data:image/png;base64,BLAHBLAHBASE64BLAHBLAH"
@@ -44,18 +41,17 @@ gh.post("/update/{roomId}/annotate", function(args) {
   if (!done) {
     var gotDrainEvent = function(result) {
       sys.puts("got drain event from filestream: " + result);
-      self.renderText("true");//indicate that other clients can now reference this image
+      response.send("true");//indicate that other clients can now reference this image
     }
     
     return fileStream.on("drain", gotDrainEvent);
   }
   //return the client some info so they can tell other clients where to get this image from
-  return this.renderText("true");
+  return response.send("true");
 });
 
-gh.post("/update/{roomId}/annotate/delete", function(args) {
-  var self = this,
-      roomId = args.roomId;
+app.post("/update/:roomId/annotate/delete", function(request, response) {
+  var roomId = request.params.roomId;
       
   //roomId came from an untrusted source, need to clean it up
   roomId = roomId.replace(/[~`!@#$%^&*()_+=":';?\/\\>.<,]/g, "");
@@ -70,16 +66,15 @@ gh.post("/update/{roomId}/annotate/delete", function(args) {
     if (error !== null) {
       sys.puts('exec error while deleting annotation image: ' + error);
       
-      return self.renderText("false");
+      return response.send("false");
     }
-    self.renderText("true");
+    response.send("true");
   });
 });
 
-gh.post("/update/{roomId}/shadow", function(args) {
-  var self = this,
-      roomId = args.roomId,
-      imgData = this.params['b64image'];
+app.post("/update/:roomId/shadow", function(req, res) {
+  var roomId = req.params.roomId,
+      imgData = req.bodyb64image;
       
   imgData = imgData.substring(imgData.indexOf(",") + 1, imgData.length);
   
@@ -94,16 +89,16 @@ gh.post("/update/{roomId}/shadow", function(args) {
   var fileStream = fs.createWriteStream(path, opt);
   if (!fileStream.writeable) {
     sys.puts("could not write to path: " + path);
-    return this.renderText("error: not writeable");
+    return res.send("error: not writeable");
   }
   
   var done = fileStream.write(imgData, "base64");
   if (!done) {
     var gotDrainEvent = function(result) {
       sys.puts("got drain event from fileStream");
-      self.renderText("true");
+      res.send("true");
     }
     return fileStream.on("drain", gotDrainEvent);
   }
-  return this.renderText("true");
+  else { return res.send("true"); }
 });
