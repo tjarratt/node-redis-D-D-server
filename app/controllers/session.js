@@ -40,14 +40,22 @@ app.get("/session", function(request, response) {
     //TODOTODO: it would be nice to password protect these eventually, right?
     //          actually maybe not? we should still list them here
     client.hgetall("sessions", function(e, result) {
-      var sessions = result? result : [];
-    
-      var activeSessions = [];
-      var thisUsersSessions = [];
+      var sessions = result? result : [],
+          activeSessions = [],
+          thisUsersSessions = [],
+          displayResult = [],
+          sessionsToDisplay = _.keys(sessions).length,
+          i = 0;
       
-      var displayResult = [];
-      var i = 0;
-      var sessionsToDisplay = _.keys(sessions).length;
+      if (!sessionsToDisplay || sessionsToDisplay <= 0) {
+        var localVars = {
+          activeSessions: [],
+          mySessions: [],
+          sessions: []
+        };
+        return response.render("session", {locals: localVars});
+      }
+      
       var renderSessions = function() {
         if (activeSessions.length == 0) {
           activeSessions = [{"name" : "There are no active sessions. Maybe you should create one?","href" : "/session/create"}];
