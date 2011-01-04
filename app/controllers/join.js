@@ -1,15 +1,14 @@
-var sys = require('sys');
-var util = require('../../util/util');
+var sys = require('sys'),
+    app = _app,
+    util = require('../../util/util'),
+    errors = require('../../util/err'),
+    client = require('../../lib/redis-client').createClient(),
+    errors = require('../../util/err'),
+    cookie = require('cookie');
+
 require("../../lib/uuid");
-var errors = require('../../util/err');
-
-var client = require('../../lib/redis-client').createClient();
-
-var errors = require('../../util/err');
 require("../../lib/underscore-min"); //exposed via _ obj
 
-var gh = require('grasshopper');
-var cookie = require('cookie');
 
 responses = {
   'idInactiveError' : "This session is not active right now.",
@@ -18,27 +17,52 @@ responses = {
   'dbError' : "Database error."
 }
 
-gh.get("/join/{id}", function(args) {
-  var self = this;
-  var id = args.id;
-  
-  //TODO: don't let more than 10 people join a table
+app.get("/join/:id", function(request, response) {
+  var id = request.params.id,
+      localVars = {};
   
   //get the ID for their session variables
-  var sessionId = gh.request.getCookie("uid");  
-  var now = new Date();
-  
+  var sessionId = request.getCookie("uid");  
   sys.puts("user with cookie:" + sessionId + " attempting to join room:" + id);
   
   //get user session data TODO: replace this with users.getUserByCookieId
   client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
     if (e || !result || !result.length || result.length < 1 || result[0] == null) {
-      self.flash["message"] = "You should authenticate before trying that again.";
+      request.flash("message", "You should authenticate before trying that again.");
       return self.redirect("/account");
+      
+      //TODO: might be nice to replace this with some flag on the page to indicate that we need to ask the user for their name first
+      //this way we could support random users dropping in, without any registration
+      
+      //check room is active
+      client.lrange(id + "/users", 0, 10, function(userSockets) {
+        var users = userSockets? userSockets.toString().split(",") : [];
+        var totalUsers = users.length;
+        
+        if (!totalUsers || totalUsers <= 0) { //short circuit when this room has no one in it
+          request.flash("message", "You should authenticate before trying that again.");
+          return self.redirect("/account");
+        }
+        else {
+          
+        }
+      });
+      
+      localVars.players = players;
+      localVars.display = "Tell us your name and pick your poison.";
+      localVars.listenId = id;
+      localVars.useDefault  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
+      localVars.websocketId = sessionId;
+      localVars.imageName = imageName;
+      localVars.userName = thisUser;
+      localVars.url = "illegaltoaster.com:8080";
+      localVars.isDM = true;
+      localVars.isKnown = true;
     }
     var thisUser = result[0].toString('utf8');
     var imageName = result[1]? result[1].toString('utf8') : "Tokens";
   
+    //TODO: I suspect this will not be common, but still a valid check. Should probably redirect to /accounts
     if (errors.isEmpty([thisUser, id, imageName])) {return self.renderText(responses['noUserError'])}
   
     //make sure this is an existing, active session
@@ -58,23 +82,29 @@ gh.get("/join/{id}", function(args) {
           users = users? users.toString().split(",") : [];
           var totalUsers = users.length;
           var thisPlayer = {name: thisUser, src: imageName}
+          
+          //don't let more than 10 people join a table
+          if (totalUsers >= 10) {
+            return self.renderText("Sorry but this room is full.");
+          }
         
           var players = [thisPlayer]
         
           if (users.length <= 0 || owner == thisUser) {
-            self.model['players'] = players;
-            self.model['display'] = responses['joinSuccess'];
-            self.model['listenId'] = id;
-            self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
-            self.model['websocketId'] = sessionId;
-            self.model['imageName'] = imageName;
-            self.model['userName'] = thisUser;
-            self.model['url'] = "butter3.local";
-            self.model['isDM'] = true;
+            localVars.players = players;
+            localVars.display = responses['joinSuccess'];
+            localVars.listenId = id;
+            localVars.useDefault  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
+            localVars.websocketId = sessionId;
+            localVars.imageName = imageName;
+            localVars.userName = thisUser;
+            localVars.url = "butter3.local";
+            localVars.isDM = true;
+            localVars.isKnown = true;
             
             //TODO:need to move this into a subview
             //adding some methods for rendering it would be nice too
-            self.model["dmPaletteOrNothing"] = '<div id="dmPalette">' +
+            localVars.dmPaletteOrNothing = '<div id="dmPalette">' +
             	'<h3>Tools</h3>' + 
             	'<input type="button" id="tool_annotate" >' + 
             	'<input type="button" id="tool_shadow" >' + 
@@ -141,16 +171,17 @@ gh.get("/join/{id}", function(args) {
                 });
               }
               var renderRoomWithPlayers = function(players) {
-                self.model['players'] = players;
-                self.model['display'] = responses['joinSuccess'];
-                self.model['listenId'] = id;
-                self.model['useDefault']  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
-                self.model['websocketId'] = sessionId; //TODO: use this to dedupe websockets when someone joins a room in multiple tabs
-                self.model['imageName'] = imageName;
-                self.model['userName'] = thisUser;
-                self.model['url'] = "butter3.local";
-                self.model['isDM'] = false;
-                self.model['dmPaletteOrNothing'] = "";
+                localVars.players = players;
+                localVars.display = responses['joinSuccess'];
+                localVars.listenId = id;
+                localVars.useDefault  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
+                localVars.websocketId = sessionId; //TODO: use this to dedupe websockets when someone joins a room in multiple tabs
+                localVars.imageName = imageName;
+                localVars.userName = thisUser;
+                localVars.url = "illegaltoaster.com:8000";
+                localVars.isDM = false;
+                localVars.isKnown = true;
+                localVars.dmPaletteOrNothing = "";
 
                 self.render("room");
               }

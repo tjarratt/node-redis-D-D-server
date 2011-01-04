@@ -57,7 +57,9 @@
 		_userName = "<%= userName %>";
 		_url = "<%= url %>";
 		_isDM = <%= isDM? true : false %>;
+		_isKnown = <%= isKnown? true : false %>;
 		
+		if (!_isKnown) {return $(document).ready(initUnknown); }
 		$(document).ready(initRoom);
 	</script>
 	<style>

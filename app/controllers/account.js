@@ -1,4 +1,5 @@
-var sys = require('sys');
+var sys = require('sys'),
+    expressApp = _app;
 
 //var client = require("../../lib/redis-client").createClient();
 //switching to node_redis, since node-redis-client doesn't support newer node required for NPM goodness
@@ -7,8 +8,6 @@ var errors = require('../../util/err');
 var util = require('../../util/util');
 var errorHandler = errors.newHandler();
 var users = require("../models/user");
-
-var gh = require('grasshopper');
 var ajaxProto = require("./ajax/ajaxAPI");
 
 //init cookieJar and secret for signed cookies
@@ -29,7 +28,7 @@ this.prototype = ajaxProto.apiPrototype();
 //set up getMethods
 //set up postMethods
 
-exports.createAccount = function(username, password, callback) {
+exports.createAccount = function(username, password, callback, res) {
   if (errors.isEmpty([username, password])) {
     callback(exports.responses['accountInputFailure']);
     return;
@@ -49,8 +48,6 @@ exports.createAccount = function(username, password, callback) {
 			  var newUID = Math.uuid();
 			  
 			  client.hset("cookie:" + newUID, "username", username, function(e, result) {
-			    var res = gh.response;
-			    
 			    sys.puts("writing uid, uname cookies");
   		    res.setCookie("uid", newUID);//TODO: change all of this to setSecureCookie and getSecureCookies
 			  
@@ -66,7 +63,7 @@ exports.createAccount = function(username, password, callback) {
 	});
 }
 
-exports.Login = function(username, password, callback) {
+exports.Login = function(username, password, callback, res) {
   sys.puts("in login for: " + username);
   
   if (errors.isEmpty([username, password])) {
@@ -96,7 +93,6 @@ exports.Login = function(username, password, callback) {
           var newUID = Math.uuid();
 
   			  client.hset("cookie:" + newUID, "username", username, function(e, result) {
-  			    var res = gh.response;
   			    var options = {path: "/"}
   			                 
   			    sys.puts("setting id:" + newUID + " for user:" + username);
@@ -110,119 +106,107 @@ exports.Login = function(username, password, callback) {
   });
 }
 
-gh.get("/account", function() {
-  var self = this;
-  
+
+expressApp.get("/account", function(request, response) { 
   //check for authenticated user, so we can allow them to set a new password or default image
-  var sessionId = gh.request.getCookie("uid");
+  var sessionId = request.getCookie("uid"),
+      msg = request.flash("message")[0];
+  
+  //sys.puts("checking for flashed messages", msg);
+  
   var gotAuthenticatedSession = function(userInfo) {
     if (!userInfo) {
       //unauthenticated version of this page
       sys.puts("unauthenticated view of /account");
-      self.model['message'] = "";
-      return self.render('account');
+      return response.render('account', {locals: {message: msg}});
     }
     
-    self.model["name"] = userInfo.userName;
-    self.model["image"] = userInfo.defaultImage;
-    return self.render("account/accountDetails");
+    return response.render("account/accountDetails", {locals: {message: msg, name: userInfo.userName, image: userInfo.defaultImage }});
   }
   sys.puts("got pageview from sessionid: " + sessionId);
   users.getUserByCookieId(sessionId, gotAuthenticatedSession);
 });
 
-gh.post("/account/image", function(args) {
-  var self = this,
-      sessionId = gh.request.getCookie("uid"),
+expressApp.post("/account/image", function(request, response) {
+  var sessionId = request.getCookie("uid"),
       image = util.hashResultMaybe(this.params, "image"),
   image = image? "/res/img/" + image + ".png" : false;
   
   if (!sessionId) {
-    self.flash["message"] = "You should authenticate before trying that again.";
-    return self.redirect("/account");
+    request.flash("message", "You should authenticate before trying that again.");
+    return response.redirect("/account");
   }
-  if (!image) {return this.renderText("Did you submit an image or nothing at all?");}
+  if (!image) {return response.send("Did you submit an image or nothing at all?");}
   
   var updatedImageCallback = function(result) {
-    if (!result) {self.renderText("failed to update image. welp.");}
-    return self.redirect("/account");
+    if (!result) {response.send("failed to update image. welp.");}
+    return response.redirect("/account");
   }
   
   //assume for now that this is not a custom image
   users.setUsersDefaultImage(sessionId, image, updatedImageCallback);
 });
 
-gh.get("/account/image/custom", function() {
-  sys.puts("bad get request to custom image upload path");
-  this.renderText("false");
-});
-
-gh.post("/account/image/custom", function(args) {
-  var self = this,
-      sessionId = gh.request.getCookie("uid"),
+expressApp.post("/account/image/custom", function(request, response) {
+  var sessionId = request.getCookie("uid"),
       image = this.params["image"];
       
   sys.puts("got user with sessionId: " + sessionId + " trying to upload an image: " + image);
       
   if (!sessionId) {
-    self.flash["message"] = "You should authenticate before trying that again.";
-    return self.redirect("/account");
+    request.flash("message", "You should authenticate before trying that again.");
+    return response.redirect("/account");
   }
-  if (!image) {return self.renderText("gotta submit an image, with the request, dude.");}
+  if (!image) {return response.send("gotta submit an image, with the request, dude.");}
   
   //get image req
   sys.puts("got this image from custom request:" + image);
   util.inspect(image);
 });
 
-gh.post("/account/{action}", function(args) {
-  var action = args.action;
-  sys.puts(action);
+expressApp.post("/account/:action", function(request, response) {
+  var action = request.params.action;
   
   if (!action || (action != "register" && action != "login")) {
-    return this.renderText("Unknown action when POSTing to /account/: " + action + ". Probably shouldn't try that again.");
+    return this.send("Unknown action when POSTing to /account/: " + action + ". Probably shouldn't try that again.");
   }
   
-  var username = this.params['user'];
-  var password = this.params['pass'];
+  var username = request.body.user;
+  var password = request.body.pass;
   
-  //what the fuck, why are these getting formatted with a comma at the end?
-  
-  var self = this;
-  if (errors.isEmpty([username, password, self])) {
-    //TODO: render the same view again, with a variable set to display this message
-    return this.renderText("Did not submit enough info... try again?");
+  if (errors.isEmpty([username, password])) {
+    //TODO: render the same view again, with a flash message to display this message
+    return response.send("Did not submit enough info... Need username, password at a bare minimum, bro.");
   }
   
   var regCallback = function(result) {
     sys.puts("in registration callback with: " + result);
     util.inspect(result);
-    self.renderText(result.message);
+    response.send(result.message);
   }
   
   var authCallback = function(result) {   
     if (!result || !result.name) {
       sys.puts("failure in authentication");
-      self.flash['message'] = "Failed to log you in. The hivemind has been notified.";
-      return self.redirect("/account");
+      
+      request.flash('message', "Failed to log you in. The hivemind has been notified.");
+      return response.redirect("/account");
     }
     
-    var now = new Date();
-    self.flash['now'] = now;
-    self.flash['message'] = "Logged in Successfully. Hello " + result.name + "."; 
+    request.flash('message', "Logged in Successfully. Hello " + result.name + ".");
     
-    self.redirect("/account");
+    response.redirect("/account");
   }
   
   if (action == "register"){
-    var confirm = this.params['passConfirm'];
+    var confirm = request.body.passConfirm;
   
     sys.puts("creating a new account for : " + username);         
-    return exports.createAccount(username, password, regCallback);
+    return exports.createAccount(username, password, regCallback, response);
   }
   else {
     sys.puts("logging in user: " + username);
     sys.puts(password);
-    return exports.Login(username, password, authCallback)
+    return exports.Login(username, password, authCallback, response);
   }
 });

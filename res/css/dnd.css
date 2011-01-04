@@ -68,3 +68,13 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+
+.leftBlock {
+  width: 500px; float: left
+}
+.rightBlock {
+  width: 300px; float: right
+}
+div#headerLinks a {
+  margin:5px;
+}

@@ -1,0 +1,33 @@
+h2 #{display}
+.clear
+h3 Sessions You've Created
+
+ul
+	- each session, sessionName in mySessions
+		li
+			a(href= session.href) #{session.name}
+			//#{session.form}
+
+.clear
+h3 Active Sessions
+ul
+	- each session, sessionName in activeSessions
+		li
+			div
+				a(href= session.href) #{session.name}
+
+.clear
+
+h3 All Sessions
+ul
+  - each session, sessionName in sessions
+		li
+			div
+				<a href="/session/edit/<%= session.id %>"><%= session.name %></a>
+
+
+a(href="/session/create") Create a new session
+
+//expose the following only if the user is an admin
+//span or 
+//a(href="/session/delete") Delete all sessions

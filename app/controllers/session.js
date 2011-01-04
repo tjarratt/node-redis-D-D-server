@@ -1,13 +1,13 @@
-var sys = require('sys');
-var util = require('../../util/util');
-require("../../lib/uuid");
-var users = require("../models/user");
-var redis = require("../../lib/redis-client");
-var client = redis.createClient();
-var errors = require('../../util/err');
+var sys = require('sys'),
+    app = _app,
+    util = require('../../util/util'),
+    users = require("../models/user"),
+    redis = require("../../lib/redis-client"),
+    client = redis.createClient(),
+    errors = require('../../util/err');
 
-require("../../lib/underscore-min")
-var gh = require('grasshopper');
+require("../../lib/underscore-min");
+require("../../lib/uuid");
 
 exports.initSession = function(id, callback) {
 	//confirm session exists
@@ -29,14 +29,13 @@ A list of sessions owned by the user
 A list of active sessions you could join
 A list of all sessions (why not?)
 */
-gh.get("/session", function() {
-  var self = this;
-  this.disableCache();
-  
+app.get("/session", function(request, response) {
   var gotUserSessionCallback = function(userInfo) {
-    var userName = userInfo.userName;
+    var userName = userInfo.userName,
+        localVars = {};
+        
     sys.puts(userName + " is viewing this page");
-    self.model['display'] = "How about a nice game of global thermonuclear war?"
+    localVars.display = "How about a nice game of global thermonuclear war?";
   
     //TODOTODO: it would be nice to password protect these eventually, right?
     //          actually maybe not? we should still list them here
@@ -58,10 +57,10 @@ gh.get("/session", function() {
           thisUsersSessions = [{"name": "You do not own any sessions", "form" : emptyForm}];
         }
       
-        self.model['activeSessions'] = activeSessions;
-        self.model["mySessions"] = thisUsersSessions;
-        self.model['sessions'] = displayResult;
-        self.render("session");
+        localVars.activeSessions = activeSessions;
+        localVars.mySessions = thisUsersSessions;
+        localVars.sessions = displayResult;
+        response.render("session", {locals: localVars});
       }
     
       var gotSessionDetails = function(e, sessionInfo) {
@@ -77,10 +76,7 @@ gh.get("/session", function() {
       
         active = active == "true" ? true : false;
         if (owner == userName) {
-          var form = '<form method="POST" action="/session/start/' + id + '">' +
-    				'<input type="submit" value="Start This Session" />' +
-    			'</form>';
-          thisUsersSessions.push({"name": name, "form" : form});
+          thisUsersSessions.push({"name": name, "href" : "/session/start/" + id});
         }
         if (active) {activeSessions.push({"name" : name, "href": "/join/" + id});}
         sessionsToDisplay--;
@@ -100,11 +96,11 @@ gh.get("/session", function() {
       });
     });
   }
-  users.getUserByCookieId(gh.request.getCookie("uid"), gotUserSessionCallback);
+  users.getUserByCookieId(request.getCookie("uid"), gotUserSessionCallback);
 });
 
-gh.get("/session/delete", function() {
-  var self = this;
+app.get("/session/delete", function(req, res) {
+  return;
   
   var callback = function(text) {    
     self.model['display'] = text || "Deleted all existing sessions.";
@@ -130,32 +126,32 @@ gh.get("/session/delete", function() {
   });
 })
 
-gh.get("/session/create", function(args) {
-  this.render("sessions/create");
+app.get("/session/create", function(req, res) {
+  res.render("sessions/create");
 });
 
-gh.post("/session/create", function(args) {
-  var name = this.params['name'],
-      max = this.params['maxPlayer'],
-      pass = this.params['password'];
+app.post("/session/create", function(request, response) {
+  var name = request.body.name,
+      max = request.body.maxPlayer,
+      pass = request.body.password,
       id = Math.uuid(),
-      sessionId = gh.request.getCookie("uid");
+      sessionId = request.getCookie("uid");
       
   var gotSessionCallback = function(userInfo) {
     if (!userInfo || !userInfo.userName) {
-      return self.renderText("Auth failure.");
+      return response.send("Auth failure.");
     }
     var username = userInfo.userName;
     
     if (errors.isEmpty([name, max])) {
-      this.renderText("Name and Max # of players are required fields.");
+      response.send("Name and Max # of players are required fields.");
       return;
     }
 
     var self = this;
 
     client.hset("sessions", id, name, function(e, result) {
-      if (e) { return self.renderText(exports.responses['sessionStorageError']);}
+      if (e) { return response.send(exports.responses['sessionStorageError']);}
 
       client.hmset(id, "name", name, "id", id, "max", max, "pass", pass, "owner", username, function(e, res) {
          if (e) {
@@ -168,7 +164,7 @@ gh.post("/session/create", function(args) {
               return;
              });
          }
-         self.renderText(exports.responses['sessionCreated']);
+         response.send(exports.responses['sessionCreated']);
       });
     });
   }
@@ -187,14 +183,14 @@ gh.post("/session/create", function(args) {
   an unfortunate limitation is that should the listener callback die, our published messages will no longer work
   Will this be an issue? Only time will tell...
 */
-gh.post("/session/start/{id}", function(args) {
-  this.model['id'] = args.id;
+app.post("/session/start/:id", function(request, response) {
+  this.model['id'] = request.params.id;
                   
   //stash this away so we can render a view when ready
   var self = this;
   var initializedCallback = function(response) {
     if (!response) {
-      self.renderText("error while starting session.");
+      response.send("error while starting session.");
     }
     
     sys.puts("initialized session: " + resMsg);
@@ -204,18 +200,16 @@ gh.post("/session/start/{id}", function(args) {
   exports.initSession(name, initializedCallback);
 });
 
-gh.get("/session/edit/{id}", function(args) {
-  this.disableCache();
+app.get("/session/edit/:id", function(request, response) {  
+  var id = request.params.id,
+      sessionId = request.getCookie("uid");
   
-  var self = this,
-      id = args.id,
-      sessionId = gh.request.getCookie("uid");
-  
-  if (errors.isEmpty([id, sessionId])) {return exports.responses['notEnoughInfo']}
+  if (errors.isEmpty([id, sessionId])) {return response.send(exports.responses['notEnoughInfo']); }
     
   //TODO: need to also return a list of maps, images for this request
   client.hmget(id, "name", "max", "pass", function(e, result) {
-    if (e) {return exports.responses['sessionStorageError']}
+    if (e) {return response.send(exports.responses['sessionStorageError']); }
+    
     name = result[0];
     max = result[1];
     pass = result[2] ? result[2] : "none";
@@ -236,12 +230,11 @@ gh.get("/session/edit/{id}", function(args) {
   });
 });
 
-gh.post("/session/delete/{id}", function(args) {
-  var self = this,
-      sessionId = args.id;
+app.post("/session/delete/:id", function(req, res) {
+  var sessionId = req.params.id;
   
   var callback = function(text) {    
-    self.renderText(text? "true" : "false");
+    res.send(text? "true" : "false");
   }
   sys.puts("trying to delete session with id: " + sessionId);
   

@@ -1,19 +1,19 @@
 try {
   var sys = require('sys');
-
-  var errorHandler = require("./util/err"); 
-  var gh = require('grasshopper');
-  var io = require("socket.io");
-
-  var cookie = require("cookie");
-
-  var util = require('./util/util');
-  var json = JSON.stringify;
-
-  var redisClient = require("./lib/redis-client").createClient();
+      express = require("express"),
+      app = express.createServer(
+        express.compiler({src: __dirname, enable: ["sass"]}),
+        express.staticProvider(__dirname)
+      ),
+      errorHandler = require("./util/err"),
+      io = require("socket.io"),
+      cookie = require("cookie"),
+      util = require('./util/util'),
+      json = JSON.stringify,
+      redisClient = require("./lib/redis-client").createClient();
 }
 catch (e) {
-  sys.puts("could not start server, suspect npm packages not installed");
+  sys.puts("could not start server, suspect npm packages not installed", e);
   return;
 }
                    
@@ -69,14 +69,12 @@ redisClient.keys("users:*", function(e, oldUsers) {
   });
 });*/
 
-gh.configure({
-    viewsDir: './app/views',
-    layout: './app/views/layout',
-    
-    //TODO: decide whether we need localization
-    //one potential use for this might be an insanity effect, or flavor for a DnD game
-    //locales: require('./locales')
-});
+app.set("views", __dirname + "/app/views");
+app.set("view engine", "jade");
+app.use(express.bodyDecoder());
+app.use(express.cookieDecoder());
+app.use(express.session());
+_app = app; //need a global ref for controllers. Urhg;
 
 ["account", 
   "map", 
@@ -92,17 +90,14 @@ gh.configure({
   require("./app/controllers/" + controller);
 });
 
-gh.get("/", function() {
-  this.disableCache();
+app.get("/", function(req, res) {
   var now = new Date();
-
-  this.model['now'] = now;
-  this.model['message'] = "";
+  sys.puts("got a visitor at " + now);
   
-  this.render('home');
+  res.render('home');
 });
      
-gh.serve(8000);
+app.listen(8000);
 sys.puts("Server running on port 8000");
 
 //initialize socket.io : I choose you!
@@ -110,7 +105,7 @@ var buffer = [], json = JSON.stringify;
 var StartSocket = function() {
   sys.puts("starting up socket.io");
   //exported http.server from grasshopper
-  var socket = io.listen(gh.server);
+  var socket = io.listen(app);
   
   //on connection, send out a small buffer, then configure on message handlers
   /*
@@ -360,8 +355,8 @@ var handleEmote = function(message) {
 }
 
 var tryStart = function() {
-  if (gh.server == null) {
-    sys.log("gh not started yet, waiting for nextTick to start socket server.");
+  if (!app || app == null) {
+    sys.log("http server not started yet, waiting for nextTick to start socket server.");
     
     //would probably be more effective to just listen for an event that GH could emit when it's done starting up
     return setTimeout(tryStart, 3000); //Fix to avoid pegging the cpu when this is failing repeatedly

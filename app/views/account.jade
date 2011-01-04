@@ -1,0 +1,29 @@
+h2 Login
+	p!=message
+
+#loginContainer
+	form(name="login", method="POST", action="/account/login")
+		input(id="user", name="user", type="text")
+		span Name
+		.clear
+		input(id="pass", name="pass", type="password")
+		span Password
+		.clear
+		input(id="submitLogin", value="Login", type="submit")
+
+.clear
+div(style="margin-top:20px")
+	span
+		input(type="button", value="Switch", id="logonRegSwitcher", onclick="switchLogonToReg(true); return false;")
+		span No account yet? Need to register?
+
+.error
+
+.script
+	:javascript
+		|	var currentTime = new Date(),
+		|			secs = currentTime.getTime();
+		| head.js("/lib/account.js", 
+		| function() {
+		| 	return; 
+		| });

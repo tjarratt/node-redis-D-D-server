@@ -1,0 +1,54 @@
+div(style="margin-bottom:20px")
+	span Hello #{name}. Care to change your default image?
+	img(src=image) Current default image //no interpolation inside element attributes?
+
+form(name="accountImage", method="POST", action="/account/image")
+	input(type="radio", name="image", value="Tokens") 
+	img(src="/res/img/Tokens.png")
+
+	input(type="radio", name="image", value="Tokens4") 
+	img(src="/res/img/Tokens4.png")
+	input(type="radio", name="image", value="Tokens5") 
+	img(src="/res/img/Tokens5.png")
+	input(type="radio", name="image", value="Tokens6") 
+	img(src="/res/img/Tokens6.png")
+.clear
+input(id="submit", name="submit", type="submit")
+
+div
+	p Or perhaps you'd like to upload a custom one... hmm?
+	input(type="file", name="image")
+	input(id="customImageSubmit", type="button", name="submit", value="submit")
+
+div(class="script", style="visibility: hidden")
+	script(src="/lib/ajaxfileupload.js", type="text/javascript")
+	:javascript
+		|	$("input#customImageSubmit").click(function(e) {
+		|		//alert(e);
+		|		$.ajaxFileUpload({
+		|			url: "/account/image/custom",
+		|			secureuri: false,
+		|			fileElementId: $(this).attr("id"),
+		|			dataType: "json",
+		|			type: "POST",
+		|			beforeSend: function() {
+		|				$("div#loading").show();
+		|			},
+		|			complete: function() {
+		|				$("div#loading").hide();
+		|			},
+		|			success: function(data, status) {
+		|				if (typeof data.error != "undefined") {
+		|					if(data.error != "") {
+		|						alert(data.error);
+		|					}
+		|					else {
+		|						alert(data.msg);
+		|					}
+		|				}
+		|			},
+		|			error: function (data, status, e) {
+		|				alert(e);
+		|			},
+		|		});
+		|	});
