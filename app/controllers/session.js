@@ -2,7 +2,7 @@ var sys = require('sys'),
     app = _app,
     util = require('../../util/util'),
     users = require("../models/user"),
-    redis = require("redis").createClient(),
+    redis = require("redis"),
     client = redis.createClient(),
     errors = require('../../util/err');
 
