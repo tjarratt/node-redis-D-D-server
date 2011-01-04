@@ -5,69 +5,83 @@ try {
         express.compiler({src: __dirname, enable: ["sass"]}),
         express.staticProvider(__dirname)
       ),
+      config = require("config"),
       errorHandler = require("./util/err"),
       io = require("socket.io"),
       cookie = require("cookie"),
       util = require('./util/util'),
       json = JSON.stringify,
-      redisClient = require("./lib/redis-client").createClient();
+      redisClient = require("redis").createClient(),
+      //redisClient = //require("./lib/redis-client").createClient();
+      
+      args = process.argv.slice(2), //slice out node and script name from cli arguments
+          isDebug = args[0];
+      isDebug = isDebug == "debug" ? true : false;
+      
+      //clean up anything from before we last shut down
+      //TODO: mark all dnd sessions as inactive
+      //TODO: delete all cookie:* hashes that aren't active
+      //TODO: block all the following code on this execution, callllllbaaaaacks
+      //TODO: check that redis is active before we do this
+      sys.puts("cleaning up old users");
+      redisClient.keys("users:*", function(e, oldUsers) {
+        var oldUsers = oldUsers? oldUsers.toString().split(",") : [];
+
+        _.each(oldUsers, function(oldUser, index) {
+          sys.puts("removing key[" + oldUser + "]");
+          redisClient.del(oldUser, function(e, result) {});
+        });
+
+      });
+
+      sys.puts("deleting all old sockets");
+      redisClient.del("sockets", function(e, result) {});
+
+      //reset all active rooms too
+      sys.puts("deleting old lists of users");
+      redisClient.keys("*/users", function(e, userLists) {
+        sys.puts("deleting old lists of users in active sessions: " + userLists);
+        var userLists = userLists? userLists.toString().split(",") : [];
+
+        _.each(userLists, function(sessionListKey, index) {
+          sys.puts("deleting a list key: " + sessionListKey);
+          redisClient.del(sessionListKey, function(e, result) {});
+        });
+      });
+
+      sys.puts("setting dummy sockets val");
+      redisClient.hset("sockets", "foo", "bar", function(e, result){ return; } );
+
+      sys.puts("cleaing up old maps");
+      redisClient.keys("*//*maps", function(e, sessionMapKeys) { //get all of the maps associated with each session
+        sessionMapKeys = sessionMapKeys? sessionMapKeys.toString().split(",") : [];
+
+        //for each session, check that each of the maps at sessionId/maps exists 
+        _.each(sessionMapKeys, function(sessionMapKey, index) {
+          sys.puts("looking at maps for session " + sessionMapKey);
+
+          redisClient.hgetall(sessionMapKey, function(e, sessionMaps) {
+            util.inspect(sessionMaps)
+            //check that each of these maps exists, if not then we need to remove it from this list
+            _.each(sessionMaps, function(mapName, mapKey, list) {
+              redisClient.hexists(mapKey, function(e, result) {
+                if (! result) {
+                  sys.puts("deleting " + mapKey + " key from hash " + sessionMapKey);
+                  redisClient.hdel(sessionMapKey, mapKey, function() {});
+                }
+              });
+            });
+          });
+        });
+      });
 }
 catch (e) {
-  sys.puts("could not start server, suspect npm packages not installed", e);
+  sys.puts("could not start server, exception:", e);
   return;
 }
                    
 //configure this now so we have this later
 __appRoot = __dirname
-
-//clean up anything from before we last shut down
-//TODO: mark all dnd sessions as inactive
-//TODO: delete all cookie:* hashes that aren't active
-//TODO: block all the following code on this execution, callllllbaaaaacks
-//TODO: check that redis is active before we do this
-sys.puts("cleaning up old users");
-redisClient.keys("users:*", function(e, oldUsers) {
-  var oldUsers = oldUsers? oldUsers.toString().split(",") : [];
-  
-  _.each(oldUsers, function(oldUser, index) {
-    sys.puts("removing key[" + oldUser + "]");
-    redisClient.del(oldUser, function(e, result) {});
-  });
-  sys.puts("deleting all old sockets");
-  redisClient.del("sockets", function(e, result) {});
-  
-  //reset all active rooms too
-  redisClient.keys("*/users", function(e, userLists) {
-    sys.puts("deleting old lists of users in active sessions");
-    var userLists = userLists? userLists.toString().split(",") : [];
-    
-    _.each(userLists, function(sessionListKey, index) {
-      redisClient.del(sessionListKey, function(e, result) {});
-    });
-  });
-});
-//sys.puts("cleaing up old maps");
-//redisClient.keys("*/maps", function(e, sessionMapKeys) { //get all of the maps associated with each session
-/*  sessionMapKeys = sessionMapKeys? sessionMapKeys.toString().split(",") : [];
-  
-  //for each session, check that each of the maps at sessionId/maps exists 
-  _.each(sessionMapKeys, function(sessionMapKey, index) {
-    sys.puts("looking at maps for session " + sessionMapKey);
-    
-    redisClient.hgetall(sessionMapKey, function(e, sessionMaps) {
-      util.inspect(sessionMaps)
-      //check that each of these maps exists, if not then we need to remove it from this list
-      _.each(sessionMaps, function(mapName, mapKey, list) {
-        redisClient.hexists(mapKey, function(e, result) {
-          if (! result) {
-            sys.puts("deleting " + mapKey + " key from hash " + sessionMapKey);
-            redisClient.hdel(sessionMapKey, mapKey, function() {});
-          }
-        });
-      });
-    });
-  });
-});*/
 
 app.set("views", __dirname + "/app/views");
 app.set("view engine", "jade");
@@ -75,6 +89,10 @@ app.use(express.bodyDecoder());
 app.use(express.cookieDecoder());
 app.use(express.session());
 _app = app; //need a global ref for controllers. Urhg;
+
+_config = isDebug? config.debug() : config.prod();
+_url = _config.url;
+sys.puts("starting with url: " + _url);
 
 ["account", 
   "map", 
@@ -97,8 +115,8 @@ app.get("/", function(req, res) {
   res.render('home');
 });
      
-app.listen(8000);
-sys.puts("Server running on port 8000");
+app.listen(_config.port);
+sys.puts("Server running on port " + _config.port.toString());
 
 //initialize socket.io : I choose you!
 var buffer = [], json = JSON.stringify;
@@ -113,10 +131,12 @@ var StartSocket = function() {
     overriding the websocket sessionId would require hacking apart the client + server libraries, when I'm not up to yet
   */
   socket.on('connection', function(client){
-    util.inspect(client);
+    //util.inspect(redisClient);
+    var redisClient = require("./lib/redis-client").createClient();
   	client.send(json({ buffer: buffer }));
+  	
   	client.on('message', function(message){
-  	  sys.puts("got message: " + message + " from: " + client.sessionId);
+  	  sys.puts("got websockets message: " + message + " from: " + client.sessionId);
   	  var webSocketId = client.sessionId;
   	  
   	  //may as well keep a hash of websocket ids in the SOCKETS space simply for the convenience of looking it up based on their websockets clientId
@@ -131,7 +151,7 @@ var StartSocket = function() {
     	    if (message.indexOf("ID:") < 0) {
     	      sys.puts("could not identify user with message:" + message);
     	      //TODO: implement a disconnect method
-    	      //client.send(json('disconnect'));
+    	      client.send(json('disconnect'));
     	      return false;
     	    }
     	    //otherwise, grab the id, stash it away in redis for now, until they try to chat again
@@ -139,7 +159,8 @@ var StartSocket = function() {
     	    sys.puts("setting userID: " + id + " for websocketId:" + webSocketId)
     	    
     	    if (!(id || id.length > 10)) {
-    	      //client.send(json('disconnect'));
+    	      sys.puts("should disconnect, got bad id");
+    	      client.send(json('disconnect'));
     	      return false;
     	    }
     	    

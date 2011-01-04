@@ -129,7 +129,7 @@ expressApp.get("/account", function(request, response) {
 
 expressApp.post("/account/image", function(request, response) {
   var sessionId = request.getCookie("uid"),
-      image = util.hashResultMaybe(this.params, "image"),
+      image = request.body.image;
   image = image? "/res/img/" + image + ".png" : false;
   
   if (!sessionId) {

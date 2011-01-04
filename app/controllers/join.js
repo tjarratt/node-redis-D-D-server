@@ -27,55 +27,62 @@ app.get("/join/:id", function(request, response) {
   
   //get user session data TODO: replace this with users.getUserByCookieId
   client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
-    if (e || !result || !result.length || result.length < 1 || result[0] == null) {
-      request.flash("message", "You should authenticate before trying that again.");
-      return self.redirect("/account");
+    if (e || !result || !result.length || result.length < 1 || !result[0] || result[0] == null) {
+      sys.puts("must be an unknown user");
+      //request.flash("message", "You should authenticate before trying that again.");
+      //return self.redirect("/account");
       
       //TODO: might be nice to replace this with some flag on the page to indicate that we need to ask the user for their name first
       //this way we could support random users dropping in, without any registration
       
       //check room is active
-      client.lrange(id + "/users", 0, 10, function(userSockets) {
+      return client.lrange(id + "/users", 0, 10, function(userSockets) {
         var users = userSockets? userSockets.toString().split(",") : [];
         var totalUsers = users.length;
         
         if (!totalUsers || totalUsers <= 0) { //short circuit when this room has no one in it
           request.flash("message", "You should authenticate before trying that again.");
-          return self.redirect("/account");
+          return response.redirect("/account");
         }
         else {
+          localVars.players = players;
+          localVars.display = "Tell us your name and pick your poison.";
+          localVars.listenId = id;
+          localVars.useDefault  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
+          localVars.websocketId = sessionId;
+          localVars.imageName = imageName;
+          localVars.userName = thisUser;
+          localVars.url = _url;
+          localVars.isDM = true;
+          localVars.isKnown = true;
           
+          response.render("room", {locals: localVars})
         }
       });
       
-      localVars.players = players;
-      localVars.display = "Tell us your name and pick your poison.";
-      localVars.listenId = id;
-      localVars.useDefault  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
-      localVars.websocketId = sessionId;
-      localVars.imageName = imageName;
-      localVars.userName = thisUser;
-      localVars.url = "illegaltoaster.com:8080";
-      localVars.isDM = true;
-      localVars.isKnown = true;
     }
+    
+    sys.puts(result[0]);
+    sys.puts(result[0] != null);
     var thisUser = result[0].toString('utf8');
-    var imageName = result[1]? result[1].toString('utf8') : "Tokens";
+    var imageName = result[1]? result[1].toString('utf8') : "/res/img/Tokens.png";
   
     //TODO: I suspect this will not be common, but still a valid check. Should probably redirect to /accounts
-    if (errors.isEmpty([thisUser, id, imageName])) {return self.renderText(responses['noUserError'])}
+    if (errors.isEmpty([thisUser, id, imageName])) {return response.send(responses['noUserError'])}
   
     //make sure this is an existing, active session
     client.hmget(id, "isActive", "owner", function(e, result) {
-      if (e || !result) {return self.renderText(responses['idInactiveError']);}
+      sys.puts("looking at isActive, owner for room:" + id);
+      if (e || !result) {return response.send(responses['idInactiveError']);}
       var isActive = util.hashResultMaybe(result, 0);
-      if (!isActive) {return self.renderText(responses['idInactiveError']);}
+      if (!isActive) {return response.send(responses['idInactiveError']);}
       
       var owner = util.hashResultMaybe(result, 1);
     
-      //the sockets hash will hold all current users by websocketId, and a reference to the room they are currently in 
+      //the users: hash will hold all current users by websocketId, and a reference to the room they are currently in 
       client.hmset("users:" + sessionId, "room", id, "name", thisUser, "defaultImage", imageName, function(e, result) {
-        if (e || !result) {return self.renderText(responses['dbError'])}
+        sys.puts("set users: hash for sessionId: " + sessionId);
+        if (e || !result) {return response.send(responses['dbError'])}
       
         //get a list of the existing usernames + images
         client.lrange(id + "/users", 0, 10, function(e, users) {
@@ -85,10 +92,11 @@ app.get("/join/:id", function(request, response) {
           
           //don't let more than 10 people join a table
           if (totalUsers >= 10) {
-            return self.renderText("Sorry but this room is full.");
+            sys.puts("joined a full room, emiting canned response.");
+            //return response.send("Sorry but this room is full.");
           }
         
-          var players = [thisPlayer]
+          var players = [thisPlayer];
         
           if (users.length <= 0 || owner == thisUser) {
             localVars.players = players;
@@ -98,7 +106,7 @@ app.get("/join/:id", function(request, response) {
             localVars.websocketId = sessionId;
             localVars.imageName = imageName;
             localVars.userName = thisUser;
-            localVars.url = "butter3.local";
+            localVars.url = _url;
             localVars.isDM = true;
             localVars.isKnown = true;
             
@@ -123,7 +131,8 @@ app.get("/join/:id", function(request, response) {
             '</div>';
 
             //get outta here!
-            return self.render("room");
+            sys.puts("emitting good, valid response.");
+            return response.render("room", {locals: localVars});
           }
         
           //user is not DM, we need to set this up so they can see other users
@@ -141,7 +150,9 @@ app.get("/join/:id", function(request, response) {
                 
                   if (e || !result || result.length < 2 || (!userName || !imageSrc)) {
                     sys.puts("got no result for hmget users:" + userId + " will attempt on next process tick.");
-                    return process.nextTick(fetchThisUser(userId));
+                    totalUsers--;
+                    return;
+                    //return process.nextTick(fetchThisUser(userId));
                   }
 
                   totalUsers--;
@@ -178,12 +189,12 @@ app.get("/join/:id", function(request, response) {
                 localVars.websocketId = sessionId; //TODO: use this to dedupe websockets when someone joins a room in multiple tabs
                 localVars.imageName = imageName;
                 localVars.userName = thisUser;
-                localVars.url = "illegaltoaster.com:8000";
+                localVars.url = _url;
                 localVars.isDM = false;
                 localVars.isKnown = true;
                 localVars.dmPaletteOrNothing = "";
 
-                self.render("room");
+                response.render("room", {locals: localVars});
               }
             
               fetchThisUser(userId);

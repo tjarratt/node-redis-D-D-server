@@ -1,25 +1,22 @@
 var sys = require('sys');
-var util = require('../../util/util');
+    util = require('../../util/util'),
+    app = _app,
+    exec = require('child_process').exec,
+    redis = require("../../lib/redis-client"),
+    client = redis.createClient(),
+    errors = require('../../util/err'),
+    json = JSON.stringify;
+
+require("../../lib/underscore-min");
 require("../../lib/uuid");
-var exec = require('child_process').exec;
 
-var redis = require("../../lib/redis-client");
-var client = redis.createClient();
-
-var errors = require('../../util/err');
-require("../../lib/underscore-min")
-var json = JSON.stringify;
-
-var gh = require('grasshopper');
-
-gh.get("/maps/{id}", function(args) {
-  var self = this;
-  var id = args.id;
+app.get("/maps/:id", function(request, response) {
+  var id = request.params.id;
   
   sys.puts("getting maps for session: " + id);
   mapObjs = [];
   client.hgetall(id + "/maps", function(e, result) {
-    if (e || !result) {return self.renderText("false")}
+    if (e || !result) {return response.send("false")}
     
     var total = _.size(result);
     sys.puts("found " + total + " maps for this session.");
@@ -51,7 +48,7 @@ gh.get("/maps/{id}", function(args) {
 
           if (total == 0) {
             sys.puts("emitting maps Array");
-            self.renderText(json(mapObjs));
+            response.send(json(mapObjs));
           }
 
         });//getall
@@ -89,7 +86,7 @@ function emitAjaxResponse(response, body, contentType) {
   ideally, this would all be completed via ajax on the client
 */
 
-gh.post("/maps/new", function(args) {
+app.post("/maps/new", function(request, response) {
   sys.puts("Trying to create a new map.");
   var self = this;
   var ajaxData = "/maps/new?";
@@ -97,11 +94,11 @@ gh.post("/maps/new", function(args) {
   //util.inspect(this);
   
   //need to wait for the rest of the ajax data to send
-  gh.request.on("data", function(chunk) {
+  request.on("data", function(chunk) {
     sys.puts("got chunk from ajax map req:" + chunk);
     ajaxData += chunk;
   });
-  gh.request.on("end", function() {
+  request.on("end", function() {
     var params = require('url').parse(ajaxData, true).query;
     util.inspect(params);
     
@@ -110,7 +107,7 @@ gh.post("/maps/new", function(args) {
         width = params.width;
         height = params.height;
         ajaxId = params.aid,
-        cookieId = gh.request.getCookie("uid");
+        cookieId = request.getCookie("uid");
         
     //get username, ajaxId from cookie
     client.hmget("cookie:" + cookieId, "username", "ajaxId", function(e, result) {
@@ -127,7 +124,7 @@ gh.post("/maps/new", function(args) {
       
       //confirm session exists
       client.hexists("sessions", sessionId, function(e, result) {
-        if (e || !result) {return self.renderText("Invalid session.")}
+        if (e || !result) {return res.send("Invalid session.")}
         var newUUID = Math.uuid();
 
         //TODO: confirm user owns session 
@@ -140,7 +137,7 @@ gh.post("/maps/new", function(args) {
               //TODO: undo the last command
               //This is a fairly common occurrence with this data model, perhaps we should, at startup, look for any 'orphaned' objects so they aren't floating free in redis
               sys.puts("Created a map for session: " + sessionId + " but did not associate it with anything. See mapid: " + newUUID);
-              return self.renderText("FUCK. Well you created a map, but it's not associated with anything.")
+              return response.send("FUCK. Well you created a map, but it's not associated with anything.")
             }
             
             //setup the view the ajax will render
@@ -157,12 +154,12 @@ gh.post("/maps/new", function(args) {
     						'<input type=\'submit\' onclick=\'return ajaxFileUpload(this);\' value=\'Send\'>' + 
       				'</div>' +
       			'</div>';
-            gh.response.writeHead(200, {
+            response.writeHead(200, {
               'Content-Length': body.length,
               'Content-Type': 'application/html'
             });
-            gh.response.write(body);
-            gh.response.end();
+            response.write(body);
+            response.end();
           });
         });
       });
@@ -171,9 +168,8 @@ gh.post("/maps/new", function(args) {
   
 });
 
-gh.post("/maps/{id}/delete", function(args) {
-  var self = this,
-      mapId = args.id;
+app.post("/maps/:id/delete", function(request, response) {
+  var mapId = request.params.id;
   var gotAjaxData = function(ajaxParams) {
     client.hexists(mapId, "width", function(e, result) {
       //gotta make sure this is actually a map key (should probably be prefaced by map: in redis)
@@ -181,29 +177,28 @@ gh.post("/maps/{id}/delete", function(args) {
       client.del(mapId, function(e, result) {
         if (e || !result) {return emitAjaxResponse(gh.response, "false", "application/json");}
         
-        emitAjaxResponse(gh.response, "true", "application/json");
+        emitAjaxResponse(response, "true", "application/json");
       });
     });
   }
-  getAjaxData(gh.request, gotAjaxData);
+  getAjaxData(request, gotAjaxData);
 });
 
 /*
   id - map ID
 */
 
-gh.post("/maps/{id}/upload", function(args) {
-  var self = this;
-  var id = args.id;
+app.post("/maps/:id/upload", function(req, res) {
+  var id = req.params.id;
   
   sys.puts("uploading an image for mapId: " + id);
   
-  var fileObj = this.params['file'];
+  var fileObj = req.body.file;
   var file = fileObj.path;
   
-  if (errors.isEmpty([id, file])) {
+  if (errors.isEmpty([id, fileObj, file])) {
     sys.puts("missing something: " + [id, file]);
-    return this.renderText("Missing some data. " + [id, file]);
+    return res.send("Missing some data. " + [id, file]);
   }
     
   var newName = __dirname + "/../../res/img/maps/" + id;
@@ -211,6 +206,7 @@ gh.post("/maps/{id}/upload", function(args) {
   
   exec('cp ' + file + " " + newName, function(error, stdout, stderr) {
     if (error !== null) {
+      res.send("nyurrrr");
       return sys.puts('exec error: ' + error);
     }
     sys.puts("copied over file to filesystem");
@@ -218,12 +214,12 @@ gh.post("/maps/{id}/upload", function(args) {
     client.hset(id, "image", "/res/img/maps/" + id, function(e, result) {
       //need to check if we actually can write to redis -- might want to kill that image otherwise
       if (e) {
-        self.renderText("whoops, redis didn't like this... deleting image");
+        res.send("whoops, redis didn't like this... deleting image");
         return exec('rm -f ' + newName);
       }
       sys.puts("saved image to disk and redis");
       
-      self.renderText(id);
+      res.send(id);
     });
   });
 });
