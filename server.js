@@ -5,7 +5,7 @@ try {
         express.compiler({src: __dirname, enable: ["sass"]}),
         express.staticProvider(__dirname)
       ),
-      config = require("config"),
+      config = require("./config"),
       errorHandler = require("./util/err"),
       io = require("socket.io"),
       cookie = require("cookie"),
