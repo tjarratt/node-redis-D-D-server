@@ -64,6 +64,11 @@ input#tool_move {
 	width: 30px;
 	height: 30px;
 }
+input#tool_delete {
+  background:url(/res/img/palette/delete.png) no-repeat;
+	width: 30px;
+	height: 30px;
+}
 #red, #green, #blue {
 	float: left;
 	clear: left;

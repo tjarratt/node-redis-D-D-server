@@ -265,6 +265,16 @@ var StartSocket = function() {
         	    bufferMsgToReplace = itemToUpdate;
         	    bufferType = "update";
         	  }
+        	  else if (message.indexOf("_delete") >= 0) {
+        	    var positionKey = message.substring(message.lastIndexOf(":") + 1, message.length),
+        	        indexOfUnderscore = positionKey.lastIndexOf("_"),
+        	        position = {x: positionKey.substring(0, indexOfUnderscore), 
+        	                    y: positionKey.substring(indexOfUnderscore + 1, positionKey.length),
+        	                    }
+        	    
+        	    sys.puts("requested delete object at position: " + positionKey);
+        	    msg = {remove: [position, name]};
+        	  }
         	  else if (message[0] == "/") {
         	    var emote = handleEmote(message);
         	    sys.puts(name + " has emote: " + emote);
@@ -272,6 +282,7 @@ var StartSocket = function() {
         	    sendToSelf = true;
         	  }
         		else {
+        		  sys.puts("got unknown message type: " + message);
         		  msg = {message: [name, message] }; 
       		  }
     		    
@@ -287,7 +298,7 @@ var StartSocket = function() {
     		      if (!didReplace) {
     		        sys.puts("error while replacing a message of type: " + bufferType);
     		        buffer.push(msg);
-    		        if (buffer.length > 15) buffer.shift();
+    		        if (buffer.length > 55) buffer.shift();
     		      } 
     		    }
     		    else {
@@ -296,7 +307,7 @@ var StartSocket = function() {
           		//we would need to either call process.onNextTick or setTimeOut to use this effectively
           		//storing it in redis may not be a bad idea either, since actions there can be guaranteed atomic
           		buffer.push(msg);
-          		if (buffer.length > 15) buffer.shift();
+          		if (buffer.length > 55) buffer.shift();
         		}
 
         		//ARGH, socket.io only supports blacklists by default
