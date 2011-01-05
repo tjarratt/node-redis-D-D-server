@@ -160,7 +160,7 @@ app.post("/session/create", function(request, response) {
     client.hset("sessions", id, name, function(e, result) {
       if (e) { return response.send(exports.responses['sessionStorageError']);}
 
-      client.hmset(id, "name", name, "id", id, "max", max, "pass", pass, "owner", username, function(e, res) {
+      client.hmset(id, "name", name, "id", id, "max", max, "pass", pass, "owner", "isActive", "true", username, function(e, res) {
          if (e) {
            //failed to write session data, rrrrroll back
            sys.puts("wrote sessionID, but no data. Welp.");
