@@ -28,10 +28,10 @@ app.post("/update/:roomId/annotate", function(request, response) {
   var path = __dirname + "/../../res/img/annotate/" + roomId + ".png";
               
   var fileStream = fs.createWriteStream(path, opt);
-  if (!fileStream.writeable) {
+  /*if (!fileStream.writeable) {
     sys.puts("could not write to path: " + path);
-    return this.renderText("not writeable");
-  }
+    return response.send("error: not writeable");
+  }*/
    
   //i worry that this will block the entire server
   //but since we pass this off to the kernel, and either receive a mesage saying "okay, wrote at once", or wait for a drain event
@@ -74,7 +74,7 @@ app.post("/update/:roomId/annotate/delete", function(request, response) {
 
 app.post("/update/:roomId/shadow", function(req, res) {
   var roomId = req.params.roomId,
-      imgData = req.bodyb64image;
+      imgData = req.body.b64image;
       
   imgData = imgData.substring(imgData.indexOf(",") + 1, imgData.length);
   
@@ -87,10 +87,10 @@ app.post("/update/:roomId/shadow", function(req, res) {
   var path = __dirname + "/../../res/img/shadow/" + roomId + ".png";
   
   var fileStream = fs.createWriteStream(path, opt);
-  if (!fileStream.writeable) {
+  /*if (!fileStream.writeable) {
     sys.puts("could not write to path: " + path);
     return res.send("error: not writeable");
-  }
+  }*/
   
   var done = fileStream.write(imgData, "base64");
   if (!done) {

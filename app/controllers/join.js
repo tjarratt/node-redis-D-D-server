@@ -29,8 +29,6 @@ app.get("/join/:id", function(request, response) {
   client.hmget("cookie:" + sessionId, "username", "defaultImage", function(e, result) {
     if (e || !result || !result.length || result.length < 1 || !result[0] || result[0] == null) {
       sys.puts("must be an unknown user");
-      //request.flash("message", "You should authenticate before trying that again.");
-      //return self.redirect("/account");
       
       //TODO: might be nice to replace this with some flag on the page to indicate that we need to ask the user for their name first
       //this way we could support random users dropping in, without any registration
@@ -109,26 +107,6 @@ app.get("/join/:id", function(request, response) {
             localVars.url = _url;
             localVars.isDM = true;
             localVars.isKnown = true;
-            
-            //TODO:need to move this into a subview
-            //adding some methods for rendering it would be nice too
-            /*localVars.dmPaletteOrNothing = '<div id="dmPalette">' +
-            	'<h3>Tools</h3>' + 
-            	'<input type="button" id="tool_annotate" >' + 
-            	'<input type="button" id="tool_shadow" >' + 
-            	'<input type="button" id="tool_erase" >' + 
-            	'<input type="button" id="tool_wipe" >' + 
-            	'<input type="button" id="tool_move" >' +
-            	'<div id="red"></div>' +
-            	'<div id="blue"></div>' +
-            	'<div id="green"></div>' +
-            	'<div id="swatch" class="ui-widget-content ui-corner-all"></div>' + 
-            '</div>' +
-            '<div class="clear"></div>' + 
-            '<h3>Maps</h3>' + 
-            '<div id="dmMaps">' + 
-            '<p id="innerMapContainer"></p>' + 
-            '</div>';*/
 
             //get outta here!
             sys.puts("emitting good, valid response.");
@@ -151,8 +129,8 @@ app.get("/join/:id", function(request, response) {
                   if (e || !result || result.length < 2 || (!userName || !imageSrc)) {
                     sys.puts("got no result for hmget users:" + userId + " will attempt on next process tick.");
                     totalUsers--;
-                    return;
-                    //return process.nextTick(fetchThisUser(userId));
+                    
+                    return totalUsers <= 0? renderRoomWithPlayers([]) : false;
                   }
 
                   totalUsers--;
@@ -192,7 +170,6 @@ app.get("/join/:id", function(request, response) {
                 localVars.url = _url;
                 localVars.isDM = false;
                 localVars.isKnown = true;
-                localVars.dmPaletteOrNothing = "";
 
                 response.render("room", {locals: localVars});
               }
