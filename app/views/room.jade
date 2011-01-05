@@ -60,7 +60,7 @@ div.clear
 		|		_url = "#{url}";
 		|		_isDM = #{isDM}? true : false;
 		|		_isKnown = #{isKnown}? true : false;
-		|		_toolBar = #{dmPaletteOrNothing};
+		|		_toolBar = "#{dmPaletteOrNothing}";
 		|		$("div#toolContainer").html(_toolBar);
 		|		if (!_isKnown) { return initUnknown(); }
 		|		return initRoom();
