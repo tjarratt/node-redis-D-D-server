@@ -112,7 +112,7 @@ app.get("/join/:id", function(request, response) {
             
             //TODO:need to move this into a subview
             //adding some methods for rendering it would be nice too
-            localVars.dmPaletteOrNothing = '<div id="dmPalette">' +
+            /*localVars.dmPaletteOrNothing = '<div id="dmPalette">' +
             	'<h3>Tools</h3>' + 
             	'<input type="button" id="tool_annotate" >' + 
             	'<input type="button" id="tool_shadow" >' + 
@@ -128,7 +128,7 @@ app.get("/join/:id", function(request, response) {
             '<h3>Maps</h3>' + 
             '<div id="dmMaps">' + 
             '<p id="innerMapContainer"></p>' + 
-            '</div>';
+            '</div>';*/
 
             //get outta here!
             sys.puts("emitting good, valid response.");

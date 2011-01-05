@@ -25,7 +25,24 @@ h2 #{display}
 			canvas(id="annotations", width="700", height="700")
 			textarea(id="textArea", rows="5", cols="14") //using this as a drop target
 
-#toolContainer
+- if (isDM || isDM == "true")
+	#dmPalette
+  	h3 Tools
+  	input(type="button", id="tool_annotate")
+  	input(type="button", id="tool_shadow")
+  	input(type="button", id="tool_erase")
+  	input(type="button", id="tool_wipe")
+  	input(type="button", id="tool_move")
+  	#red
+  	#blue
+  	#green
+  	#swatch(class="ui-widget-content ui-corner-all")
+
+  .clear
+  h3 Maps
+  #dmMaps
+  p(id="innerMapContainer")
+
 #players
 	h3 Players
 	- each playerObj, playerName in players
@@ -59,8 +76,6 @@ div.clear
 		|		_url = "#{url}";
 		|		_isDM = #{isDM}? true : false;
 		|		_isKnown = #{isKnown}? true : false;
-		|		_toolBar = '#{dmPaletteOrNothing}';
-		|		$("div#toolContainer").html(_toolBar);
 		|		if (!_isKnown) { return initUnknown(); }
 		|		return initRoom();
 		|	});	
