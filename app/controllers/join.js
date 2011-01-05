@@ -130,7 +130,7 @@ app.get("/join/:id", function(request, response) {
                     sys.puts("got no result for hmget users:" + userId + " will attempt on next process tick.");
                     totalUsers--;
                     
-                    return totalUsers <= 0? renderRoomWithPlayers([]) : false;
+                    return totalUsers <= 0? renderRoomWithPlayers(players) : false;
                   }
 
                   totalUsers--;
