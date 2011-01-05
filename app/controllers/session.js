@@ -175,7 +175,7 @@ app.post("/session/create", function(request, response) {
     });
   }
   
-  users.getUserBygetUserByCookieId(sessionId, gotSessionCallback);
+  users.getUserByCookieId(sessionId, gotSessionCallback);
   
 });
   
