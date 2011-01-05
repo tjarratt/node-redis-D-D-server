@@ -170,7 +170,8 @@ app.post("/session/create", function(request, response) {
              return response.render("session", {locals: localVars});
            });
          }
-         response.send(exports.responses['sessionCreated']);
+         request.flash("message", "session creation success!");
+         response.redirect("/session");
       });
     });
   }

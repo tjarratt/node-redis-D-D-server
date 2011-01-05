@@ -23,7 +23,7 @@ ul
   - each session, sessionName in sessions
 		li
 			div
-				a(href="/session/edit/" + session.id) session.name
+				a(href="/session/edit/" + session.id) #{session.name}
 
 
 a(href="/session/create") Create a new session
