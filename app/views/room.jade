@@ -25,7 +25,7 @@ h2 #{display}
 			canvas(id="annotations", width="700", height="700")
 			textarea(id="textArea", rows="5", cols="14") //using this as a drop target
 
-#{dmPaletteOrNothing}
+#toolContainer
 #players
 	h3 Players
 	- each playerObj, playerName in players
@@ -60,6 +60,8 @@ div.clear
 		|		_url = "#{url}";
 		|		_isDM = #{isDM}? true : false;
 		|		_isKnown = #{isKnown}? true : false;
+		|		_toolBar = #{dmPaletteOrNothing};
+		|		$("div#toolContainer").html(_toolBar);
 		|		if (!_isKnown) { return initUnknown(); }
 		|		return initRoom();
 		|	});	
