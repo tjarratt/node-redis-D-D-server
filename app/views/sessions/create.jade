@@ -1,0 +1,14 @@
+h3 Create a new table top game session
+#createSessionContainer
+	.formElement
+		form(action="/session/create", method="post")
+			input(type="text", name="name")
+			span Session name (descriptive, ie My Dark Sun Campaign)
+			.clear
+			input(type="text", name="maxPlayer", value="0")
+			span Max number of players
+			.clear
+			input(type="text", name="password")
+			span Password (Optional)
+			.clear
+			input(type="submit", name="submitSession", value="create your session")

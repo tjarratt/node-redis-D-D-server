@@ -1,0 +1,94 @@
+div.innerChat {
+	width: 20px;
+}
+div#canvasContainer {
+	position: relative;
+	top:-368px;
+	left:-70px;
+	float:right;
+	padding: 10;
+}
+div#canvasContainer canvas, textArea {
+	height: 700px;
+	width: 700px;
+	position: absolute;
+}
+textarea#textArea {
+	background-color: transparent;
+  resize: none;             
+}
+div#canvasContainer {
+	width: 700px;
+}
+div#chat {
+	width: 500px;
+}
+form#form {
+	width: 482px;
+}
+input#text {
+	width: 400px!important;
+}
+div#privateChat {
+	width:500px;
+	height:100px;
+}
+input#privateInput {
+	width: 500px!important;
+}
+form#privateForm {
+	width: 482px;
+}
+input#tool_annotate {
+	background:url(/res/img/palette/annotate.png) no-repeat;
+	width: 30px;
+	height: 30px;
+}
+input#tool_shadow {
+	background:url(/res/img/palette/shadow.png) no-repeat;
+	width: 30px;
+	height: 30px;
+}
+input#tool_wipe {
+	background:url(/res/img/palette/wipe.png) no-repeat;
+	width: 30px;
+	height: 30px;
+}
+input#tool_erase {
+	background:url(/res/img/palette/erase.png) no-repeat;
+	width: 30px;
+	height: 30px;
+}
+input#tool_move {
+	background:url(/res/img/palette/pointer.png) no-repeat;
+	width: 30px;
+	height: 30px;
+}
+#red, #green, #blue {
+	float: left;
+	clear: left;
+	width: 300px;
+	margin: 15px;
+}
+#swatch {
+	width: 120px;
+	height: 100px;
+	margin-top: 18px;
+	margin-left: 350px;
+	background-image: none;
+}
+#red .ui-slider-range { background: #ef2929; }
+#red .ui-slider-handle { border-color: #ef2929; }
+#green .ui-slider-range { background: #8ae234; }
+#green .ui-slider-handle { border-color: #8ae234; }
+#blue .ui-slider-range { background: #729fcf; }
+#blue .ui-slider-handle { border-color: #729fcf; }
+/*DM map Control*/
+div#dmMaps {
+	height : 75px;
+	width: 100px;
+	overflow-x: auto;
+}
+div.playerBlock {
+	width: 55px; float: left
+}

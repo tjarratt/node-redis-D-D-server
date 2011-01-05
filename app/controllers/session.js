@@ -7,7 +7,7 @@ var sys = require('sys'),
     errors = require('../../util/err');
 
 require("../../lib/underscore-min");
-require("../../lib/uuid");
+require("../../lib/uuid"); //TODO: these should all be from __dirroot, or inheirited from a controller prototype
 
 exports.initSession = function(id, callback) {
 	//confirm session exists
@@ -48,12 +48,11 @@ app.get("/session", function(request, response) {
           i = 0;
       
       if (!sessionsToDisplay || sessionsToDisplay <= 0) {
-        var localVars = {
-          activeSessions: [],
-          mySessions: [],
-          sessions: []
-        };
-        return response.render("session", {locals: localVars});
+          localVars.activeSessions = [{"name" : "There are no active sessions. Maybe you should create one?","href" : "/session/create"}];
+          localVars.mySessions = [{"name": "You do not own any sessions", "form" : ""}];
+          localVars.sessions = [];
+          localVars.display = "There are no sessions yet. Uh oh.";
+          return response.render("session", {locals: localVars});
       }
       
       var renderSessions = function() {
@@ -65,6 +64,7 @@ app.get("/session", function(request, response) {
           thisUsersSessions = [{"name": "You do not own any sessions", "form" : emptyForm}];
         }
       
+        localVars.display = "Here are some awesome game rooms to choose from...";
         localVars.activeSessions = activeSessions;
         localVars.mySessions = thisUsersSessions;
         localVars.sessions = displayResult;
@@ -143,7 +143,8 @@ app.post("/session/create", function(request, response) {
       max = request.body.maxPlayer,
       pass = request.body.password,
       id = Math.uuid(),
-      sessionId = request.getCookie("uid");
+      sessionId = request.getCookie("uid"),
+      localVars = {};
       
   var gotSessionCallback = function(userInfo) {
     if (!userInfo || !userInfo.userName) {
@@ -156,8 +157,6 @@ app.post("/session/create", function(request, response) {
       return;
     }
 
-    var self = this;
-
     client.hset("sessions", id, name, function(e, result) {
       if (e) { return response.send(exports.responses['sessionStorageError']);}
 
@@ -166,11 +165,10 @@ app.post("/session/create", function(request, response) {
            //failed to write session data, rrrrroll back
            sys.puts("wrote sessionID, but no data. Welp.");
            client.hdel("sessions", id, function(e, r) {
-              self.model['display'] = exports.responses['sessionStorageError'];
-              self.render("session");
-
-              return;
-             });
+             localVars.display = exports.responses["sessionStorageError"];
+             
+             return response.render("session", {locals: localVars});
+           });
          }
          response.send(exports.responses['sessionCreated']);
       });
@@ -181,28 +179,18 @@ app.post("/session/create", function(request, response) {
   
 });
   
-  //ignore the comment below, we're using websockets now, with some fallback for weaksauce browsers (prob xhr + flash)
-  
-/*
-  The way this works is that we grab the name of the session, match it in redis
-  and then set up a client.subscribeTo with a callback. This callback will handle all messages and push them to 
-  a hash that clients will be able to access via "/session/listen/{id}"
-  
-  an unfortunate limitation is that should the listener callback die, our published messages will no longer work
-  Will this be an issue? Only time will tell...
-*/
+//TODO: Starting and stopping sessions has only been done manually, perhaps we should just get rid of this?
 app.post("/session/start/:id", function(request, response) {
-  this.model['id'] = request.params.id;
+  var id = request.params.id;
                   
   //stash this away so we can render a view when ready
-  var self = this;
   var initializedCallback = function(response) {
     if (!response) {
       response.send("error while starting session.");
     }
     
     sys.puts("initialized session: " + resMsg);
-    self.redirect("/join/" + id);
+    response.redirect("/join/" + id);
   }
   
   exports.initSession(name, initializedCallback);
@@ -210,8 +198,10 @@ app.post("/session/start/:id", function(request, response) {
 
 app.get("/session/edit/:id", function(request, response) {  
   var id = request.params.id,
-      sessionId = request.getCookie("uid");
+      sessionId = request.getCookie("uid"),
+      localVars = {};
   
+  sys.puts("going to edit a page now");
   if (errors.isEmpty([id, sessionId])) {return response.send(exports.responses['notEnoughInfo']); }
     
   //TODO: need to also return a list of maps, images for this request
@@ -223,16 +213,18 @@ app.get("/session/edit/:id", function(request, response) {
     pass = result[2] ? result[2] : "none";
     var ajaxId = Math.uuid();
     
+    sys.puts("going to set some valie in redis then rendering");
     client.hmset("cookie:" + sessionId, "ajaxId", ajaxId, function(e, result) {
       if (e || !result) {sys.puts('error while setting ajax id for this session.');}
       
-      self.model["sid"] = ajaxId;
-      self.model['name'] = name;
-      self.model['max'] = max;
-      self.model['pass'] = pass? pass : "none";
-      self.model['id'] = id;
-
-      self.render("sessions/edit");
+      localVars.sid = ajaxId;
+      localVars.name = name;
+      localVars.max = max;
+      localVars.pass = pass? pass: "none";
+      localVars.id = id;
+      
+      sys.puts("okay render");
+      response.render("sessions/edit", {locals: localVars});
     });
     
   });

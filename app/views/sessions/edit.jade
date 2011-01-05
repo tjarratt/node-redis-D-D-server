@@ -1,0 +1,54 @@
+h3 Edit the fuck out of your session. Go hog wild!
+.editId(id= id)
+	.formElement
+		form(action="/session/edit/" + id, method="post")
+			input(type="text", value=name, name="name")
+			span Session name
+			.clear
+			input(type="text", value= max, name="maxPlayer", value="0")
+			span Max number of players
+			.clear
+			input(type="text", value="****", name="password")
+			span Password (Optional)
+			clear
+			input(type="submit", name="submitSession", value="save changes")
+
+	#mapsContainer(class="formElement")
+		p(id="mapLoading") Loading available maps...
+		#mapListHeader(style="display:none")
+			span(class="mapName", style="padding: 20px;") Name
+			span(class="mapWidth", style="padding: 20px;") Width
+			span(class="mapHeight", style="padding: 20px;") Height
+			span(class="mapHeight", style="padding: 20px;") Image
+		#mapsList(style="display:none")
+			.mapInnerContainer
+				a(class="detail", href="#")
+					span(class="mapName", style="padding: 20px;")
+				span(class="mapWidth", style="padding: 20px;")
+				span(class="mapHeight", style="padding: 20px;")
+				img(src="", style="visiblility:hidden")
+				a(class="rm", href="#", onclick="deleteThis(this); return false;") x
+				.file-uploader
+					noscript Please enable Javascript
+
+	.clear
+	.formElement
+		h4 Add a new map to this game session
+		input(type="text", id="mapName", name="name") Give it a name
+		.clear
+		input(type="text", id="mapWidth", name="width") Width
+		.clear
+		input(type="text", id="mapHeight", name="height") Height  
+		.clear
+		input(type="button", id="newMapSubmit", name="submit", value="Create a new map")
+
+.scripts
+	input(id="aid", type="text", style="visibility: hidden;", value= sid)
+	:javascript
+		|	var currentTime = new Date(),
+		|			secs = currentTime.getTime();	
+		|	head.js("/lib/ajaxfileupload.js", "/lib/editSession.js", 
+		| 	function() {
+		|			//do some stuff now that we have this loaded
+		|			return;
+		| });
