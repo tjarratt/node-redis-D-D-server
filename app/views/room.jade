@@ -35,14 +35,27 @@ h2 #{display}
   	input(type="button", id="tool_move")
 		input(type="button", id="tool_delete")
   	.clear
-		canvas(id="colorwheel", width="100", height="100")
+		.creatures
+			img(class="playerImg", src="/res/img/creatures/monster1.png")
+			img(class="playerImg", src="/res/img/creatures/monster2.png")
+			img(class="playerImg", src="/res/img/creatures/monster3.png")
+			img(class="playerImg", src="/res/img/creatures/monster4.png")
+			img(class="playerImg", src="/res/img/creatures/monster5.png")
+			img(class="playerImg", src="/res/img/creatures/monster6.png")
+			img(class="playerImg", src="/res/img/creatures/monster7.png")
+			img(class="playerImg", src="/res/img/creatures/monster8.png")
+			img(class="playerImg", src="/res/img/creatures/monster9.png")
 		.clear
-  	#swatch(class="ui-widget-content ui-corner-all")
+		.hidden
+			canvas(id="colorwheel", width="100", height="100")
+			.clear
+	  	#swatch(class="ui-widget-content ui-corner-all")
 
   .clear
-  h3 Maps
-  #dmMaps
-  p(id="innerMapContainer")
+	.hidden
+	  h3 Maps
+	  #dmMaps
+	  p(id="innerMapContainer")
 
 #players
 	h3 Players

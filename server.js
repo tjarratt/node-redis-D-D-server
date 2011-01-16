@@ -254,8 +254,34 @@ var StartSocket = function() {
         	  var indexOfMove = message.indexOf("_move_");
         	  if (indexOfMove >= 0) {
         	    sys.puts("creating a move message");
-        	    msg = {move : [name, message.substring(message.lastIndexOf("_"), message.length)]}
+        	    sys.puts(message);
+        	    sys.puts(sys.inspect(message));
+        	    
+        	    var msgObj = {};
+        	    try {
+        	      msgObj = JSON.parse(message);
+        	      msgDetails = msgObj._move_;
+        	    }
+        	    catch (e) {}
+        	    
+        	    if (!msgDetails) {msgDetails = {};}
+        	    
+        	    msg = {move: {who: msgDetails.from, x: msgDetails.x, y: msgDetails.y, src: msgDetails.img}};
+        	    //msg = {move : [name, message.substring(message.lastIndexOf("_"), message.length)]}
         	    //TODO: find a way to replace the last move message for this user
+        	  }
+        	  else if (message.indexOf("_add_") >= 0) { //_add_x:hurf,y:durf,src:herp
+        	    //adding a new icon to the board
+        	    var indexOfX = message.lastIndexOf("x:") + 2,
+        	        indexOfY = message.lastIndexOf("y:") + 2,
+        	        indexOfImg = message.lastIndexOf("src:") + 4,
+        	        posX = message.substring(indexOfX, message.indexOf(",y")),
+        	        posY = message.substring(indexOfY, message.indexOf(",src")),
+        	        image = message.substring(indexOfImg, message.length);
+        	        
+    	        msg = {add: {who: name, x: posX, y: posY, img: image}};
+    	        sys.puts("created this _add_ move for " + name);
+    	        sys.puts(sys.inspect(msg));    	        
         	  }
         	  else if (message.indexOf("_update") >= 0) {
         	    var itemToUpdate = message.substring(message.lastIndexOf(":") + 1, message.lenth);

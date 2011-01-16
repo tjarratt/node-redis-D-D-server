@@ -26,4 +26,8 @@ div.mapInnerContainer {
 }
 span.file-uploader {
   float:right;
+} 
+
+div.hidden {
+  visibility: hidden;
 }
