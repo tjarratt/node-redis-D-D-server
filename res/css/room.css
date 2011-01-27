@@ -3,14 +3,14 @@ div.innerChat {
 }
 div#canvasContainer {
 	position: relative;
-	top:-368px;
+	top:-338px;
 	left:-70px;
 	float:right;
 	padding: 10;
 }
 div#canvasContainer canvas, textArea {
-	height: 700px;
-	width: 700px;
+	height: 1250px;
+	width: 1250px;
 	position: absolute;
 }
 textarea#textArea {
@@ -18,7 +18,7 @@ textarea#textArea {
   resize: none;             
 }
 div#canvasContainer {
-	width: 700px;
+	width: 1250px;
 }
 div#chat {
 	width: 500px;

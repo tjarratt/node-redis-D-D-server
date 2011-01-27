@@ -31,3 +31,7 @@ span.file-uploader {
 div.hidden {
   visibility: hidden;
 }
+
+#mapChatContainer {
+  top:50px;
+}

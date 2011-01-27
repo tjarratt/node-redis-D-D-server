@@ -10,20 +10,20 @@ h2 #{display}
 
 	div
 		#canvasContainer
-			canvas(id="background", width="700", height="700")
+			canvas(id="background", width="1250", height="1250")
 			//drawing the actual map image here
 			
-			canvas(id="shadow", width="700", height="700")
-			canvas(id="shadowDrag", width="700", height="700")
+			canvas(id="shadow", width="1250", height="1250")
+			canvas(id="shadowDrag", width="1250", height="1250")
 			//new shadows while dragging are drawn here
 			
-			canvas(id="map", width="700", height="700") 
+			canvas(id="map", width="1250", height="1250") 
 			//the PC images "live" here 
 			
-			canvas(id="top", width="700", height="700") 
+			canvas(id="top", width="1250", height="1250") 
 			//dragging player images
-			canvas(id="annotations", width="700", height="700")
-			textarea(id="textArea", rows="5", cols="14") //using this as a drop target
+			canvas(id="annotations", width="1250", height="1250")
+			textarea(id="textArea", rows="25", cols="25") //using this as a drop target
 
 - if (isDM || isDM == "true")
 	#dmPalette
