@@ -35,3 +35,6 @@ div.hidden {
 #mapChatContainer {
   top:50px;
 }
+.fr {
+  float: right;
+}

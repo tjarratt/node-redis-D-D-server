@@ -3,7 +3,7 @@ div.innerChat {
 }
 div#canvasContainer {
 	position: relative;
-	top:-338px;
+	top:0px;
 	left:-70px;
 	float:right;
 	padding: 10;

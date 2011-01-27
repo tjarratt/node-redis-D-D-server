@@ -14,6 +14,9 @@ div.scripts {
 #form input[type=submit]:hover { background: #A2A2A2; }
 #form input[type=submit]:active { position: relative; top: 2px; }
 
+.fr {
+  float:right;
+}
 /* reset css */
 /* http://meyerweb.com/eric/tools/css/reset/ */
 /* v1.0 | 20080212 */

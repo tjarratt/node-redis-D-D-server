@@ -1,30 +1,4 @@
 h2 #{display}
-#mapChatContainer
-	#chatContainer
-		#chat
-			p Connecting...
-
-		form(id="form")
-		  input(type="text", autocomplete="off", id="text")
-			input(type="submit", value="Send")
-
-	div
-		#canvasContainer
-			canvas(id="background", width="1250", height="1250")
-			//drawing the actual map image here
-			
-			canvas(id="shadow", width="1250", height="1250")
-			canvas(id="shadowDrag", width="1250", height="1250")
-			//new shadows while dragging are drawn here
-			
-			canvas(id="map", width="1250", height="1250") 
-			//the PC images "live" here 
-			
-			canvas(id="top", width="1250", height="1250") 
-			//dragging player images
-			canvas(id="annotations", width="1250", height="1250")
-			textarea(id="textArea", rows="25", cols="25") //using this as a drop target
-
 - if (isDM || isDM == "true")
 	#dmPalette
   	h3 Tools
@@ -46,17 +20,10 @@ h2 #{display}
 			img(class="playerImg", src="/res/img/creatures/monster8.png")
 			img(class="playerImg", src="/res/img/creatures/monster9.png")
 		.clear
-		.hidden
+		.hidden(class="fr")
 			canvas(id="colorwheel", width="100", height="100")
 			.clear
 	  	#swatch(class="ui-widget-content ui-corner-all")
-
-  .clear
-	.hidden
-	  h3 Maps
-	  #dmMaps
-	  p(id="innerMapContainer")
-
 #players
 	h3 Players
 	- each playerObj, playerName in players
@@ -65,14 +32,38 @@ h2 #{display}
 			div(id=playerObj.name)
 				.innerChat
 					a(href="#", class="chatLink", id= playerObj.name) #{playerObj.name}
-
-div.clear
-#privateChat
+#privateChat(class="fr")
 	p Connecting
 
 	form(id="privateForm")
 	input(type="text", autocomplete="off", id="privateInput")
 	input(type="submit", value="Send")
+.clear
+#mapChatContainer
+	div
+		#canvasContainer
+			canvas(id="background", width="1250", height="1250")
+			//drawing the actual map image here
+			
+			canvas(id="shadow", width="1250", height="1250")
+			canvas(id="shadowDrag", width="1250", height="1250")
+			//new shadows while dragging are drawn here
+			
+			canvas(id="map", width="1250", height="1250") 
+			//the PC images "live" here 
+			
+			canvas(id="top", width="1250", height="1250") 
+			//dragging player images
+			canvas(id="annotations", width="1250", height="1250")
+			textarea(id="textArea", rows="25", cols="25") //using this as a drop target
+
+#chatContainer
+	#chat
+		p Connecting...
+
+	form(id="form")
+	  input(type="text", autocomplete="off", id="text")
+		input(type="submit", value="Send")
 
 .scripts
 	:javascript
