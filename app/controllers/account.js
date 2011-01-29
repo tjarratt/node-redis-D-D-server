@@ -38,26 +38,23 @@ exports.createAccount = function(username, password, callback, res) {
   });
   
   client.hexists("accounts", username, function(result) {
-		sys.puts("got result: " + result + " for hexists account " + username);
-		if (!result) {
-			client.hset("accounts", username, password, function(err, result) {
-			  //drop cookie, set session info
-			  var newUID = Math.uuid();
-			  
-			  client.hset("cookie:" + newUID, "username", username, function(e, result) {
-			    sys.puts("writing uid, uname cookies");
-  		    res.setCookie("uid", newUID,  {path: "/"});//TODO: change all of this to setSecureCookie and getSecureCookies
-			  
-			    return callback(exports.responses['accountSuccess']);
-			  });
-		  });
-	  }
-		
-		else {
-			callback(exports.responses['accountExistsError']);
-		}
-		
-	});
+    sys.puts("got result: " + result + " for hexists account " + username);
+    if (!result) {
+      client.hset("accounts", username, password, function(err, result) {
+        //drop cookie, set session info
+        var newUID = Math.uuid();
+        
+        client.hset("cookie:" + newUID, "username", username, function(e, result) {
+          sys.puts("writing uid, uname cookies");
+          res.setCookie("uid", newUID,  {path: "/"});//TODO: change all of this to setSecureCookie and getSecureCookies
+          
+          return callback(exports.responses['accountSuccess']);
+        });
+      });
+    }
+    
+    else { callback(exports.responses['accountExistsError']); }
+  });
 }
 
 exports.Login = function(username, password, callback, res) {
@@ -77,11 +74,15 @@ exports.Login = function(username, password, callback, res) {
       return callback(exports.responses['accountNotExists']);
     }
     else {
-      client.hget("accounts", username, function(e, realPassword) {
+      client.hget("accounts", username, function(e, realPassword, blarg) {
         sys.puts("got password for " + username);
         //basic auth is basic
         if (realPassword != password) {
-          sys.puts("bad password.");
+          sys.puts("bad password");
+          if (_config.url = "localhost") {
+            sys.puts(realPassword + "!=" + password);
+          }
+          
           return callback(exports.responses['passwordMismatchFailure']);
         }
         else {
@@ -89,12 +90,11 @@ exports.Login = function(username, password, callback, res) {
           sys.puts("auth successful");
           var newUID = Math.uuid();
 
-  			  client.hset("cookie:" + newUID, "username", username, function(e, result) {
-  			    var options = {path: "/"};
-  			                 
-  			    sys.puts("setting id:" + newUID + " for user:" + username);
-    			  //res.setCookie("uname", username, options);
-    			  res.setCookie("uid", newUID, options);
+          client.hset("cookie:" + newUID, "username", username, function(e, result) {
+            var options = {path: "/"};
+            
+            sys.puts("setting id:" + newUID + " for user:" + username);
+            res.setCookie("uid", newUID, options);
             callback({name: username});
           });
         }

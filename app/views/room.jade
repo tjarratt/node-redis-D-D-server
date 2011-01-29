@@ -1,44 +1,4 @@
 h2 #{display}
-- if (isDM || isDM == "true")
-	#dmPalette
-  	h3 Tools
-  	input(type="button", id="tool_annotate")
-  	input(type="button", id="tool_shadow")
-  	input(type="button", id="tool_erase")
-  	input(type="button", id="tool_wipe")
-  	input(type="button", id="tool_move")
-		input(type="button", id="tool_delete")
-  	.clear
-		.creatures
-			img(class="playerImg", src="/res/img/creatures/monster1.png")
-			img(class="playerImg", src="/res/img/creatures/monster2.png")
-			img(class="playerImg", src="/res/img/creatures/monster3.png")
-			img(class="playerImg", src="/res/img/creatures/monster4.png")
-			img(class="playerImg", src="/res/img/creatures/monster5.png")
-			img(class="playerImg", src="/res/img/creatures/monster6.png")
-			img(class="playerImg", src="/res/img/creatures/monster7.png")
-			img(class="playerImg", src="/res/img/creatures/monster8.png")
-			img(class="playerImg", src="/res/img/creatures/monster9.png")
-		.clear
-		.hidden(class="fr")
-			canvas(id="colorwheel", width="100", height="100")
-			.clear
-	  	#swatch(class="ui-widget-content ui-corner-all")
-#players
-	h3 Players
-	- each playerObj, playerName in players
-		.playerBlock
-			img(class="playerImg", src= playerObj.src, id="player_" + playerObj.name)
-			div(id=playerObj.name)
-				.innerChat
-					a(href="#", class="chatLink", id= playerObj.name) #{playerObj.name}
-#privateChat(class="fr")
-	p Connecting
-
-	form(id="privateForm")
-	input(type="text", autocomplete="off", id="privateInput")
-	input(type="submit", value="Send")
-.clear
 #mapChatContainer
 	div
 		#canvasContainer
@@ -56,15 +16,71 @@ h2 #{display}
 			//dragging player images
 			canvas(id="annotations", width="1250", height="1250")
 			textarea(id="textArea", rows="25", cols="25") //using this as a drop target
-
-#chatContainer
-	#chat
-		p Connecting...
-
-	form(id="form")
-	  input(type="text", autocomplete="off", id="text")
-		input(type="submit", value="Send")
-
+	.clear(style="height:50px")
+#tabbedContentContainer
+	#tabbedContentArea
+		- if (isDM && (isDM == "true" || typeof isDM == "boolean"))
+		#toolsContainer
+			h3 Tools
+			input(type="button", id="tool_annotate")
+			input(type="button", id="tool_shadow")
+			input(type="button", id="tool_erase")
+			input(type="button", id="tool_wipe")
+			input(type="button", id="tool_move")
+			input(type="button", id="tool_delete")
+			.clear
+				.creatures
+					img(class="playerImg", src="/res/img/creatures/monster1.png")
+					img(class="playerImg", src="/res/img/creatures/monster2.png")
+					img(class="playerImg", src="/res/img/creatures/monster3.png")
+					img(class="playerImg", src="/res/img/creatures/monster4.png")
+					img(class="playerImg", src="/res/img/creatures/monster5.png")
+					img(class="playerImg", src="/res/img/creatures/monster6.png")
+					img(class="playerImg", src="/res/img/creatures/monster7.png")
+					img(class="playerImg", src="/res/img/creatures/monster8.png")
+					img(class="playerImg", src="/res/img/creatures/monster9.png")
+				.clear
+				.hidden(class="fr")
+					canvas(id="colorwheel", width="100", height="100")
+					.clear
+			  	#swatch(class="ui-widget-content ui-corner-all")
+		#roomContainer
+			h3 Players
+			- each playerObj, playerName in players
+				.playerBlock
+					img(class="playerImg", src= playerObj.src, id="player_" + playerObj.name)
+					div(id=playerObj.name)
+						.innerChat
+							a(href="#", class="chatLink", id= playerObj.name) #{playerObj.name}
+		#whisperContainer(class="fr")
+			h3 Private Chat
+			p Connecting
+			form(id="privateForm")
+			input(type="text", autocomplete="off", id="privateInput")
+			input(type="submit", value="Send")
+		.clear
+		#chatContainer
+			h3 Chat / History
+			#chat
+				p Connecting...
+			form(id="form")
+			  input(type="text", autocomplete="off", id="text")
+				input(type="submit", value="Send")
+#tabViewContainer
+	#tabbedView
+		.fl(class="tabItem", id="roomItem")
+			p room info
+		.fl(class="tabItem", id="chatItem")
+			p chat
+		//.fl(class="tabItem", id="whisperItem")
+		//	p whisper
+		- if (isDM )
+			.fl(class="tabItem", id="toolsItem")
+				p tools
+			//.fl(class="tabItem", id="mapsItem")
+			//	p maps
+			.fl(class="tabItem", id="discloseItem")
+				p \/\\
 .scripts
 	:javascript
 		|	var currentTime = new Date(),
@@ -82,5 +98,7 @@ h2 #{display}
 		|		_isDM = #{isDM}? true : false;
 		|		_isKnown = #{isKnown}? true : false;
 		|		if (!_isKnown) { return initUnknown(); }
-		|		return initRoom();
+		|		initRoom();
+		|		initDrawer();
+		|		return;
 		|	});	

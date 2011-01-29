@@ -6,7 +6,10 @@ div#canvasContainer {
 	top:0px;
 	left:-70px;
 	float:right;
-	padding: 10;
+	width:1500px;
+}
+div#mapChatContainer {
+  padding-bottom:50px;
 }
 div#canvasContainer canvas, textArea {
 	height: 1250px;
@@ -22,6 +25,7 @@ div#canvasContainer {
 }
 div#chat {
 	width: 500px;
+	background:white;
 }
 form#form {
 	width: 482px;
@@ -66,6 +70,7 @@ input#tool_move {
 }
 input#tool_delete {
   background:url(/res/img/palette/delete.png) no-repeat;
+  background-color:white;
 	width: 30px;
 	height: 30px;
 }
@@ -90,4 +95,62 @@ div#dmMaps {
 }
 div.playerBlock {
 	width: 55px; float: left
+}
+
+/*bottom area drawer*/
+
+.tabItem {
+  width: 100px;
+  height:100px;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-bottom: 25px;
+  background:brown;
+}
+
+#tabViewContainer {
+  bottom: 0px;
+  height: 65px;
+  overflow: hidden;
+  position: fixed;
+  right: 0px;
+  width: 500px;
+  z-index: 1e+06;
+}
+
+#tabbedView {
+  bottom: -30px;
+  display: block;
+  height: 92px;
+  overflow: hidden;
+  padding: 15px 30px 0px 17px;
+  right: 0px;
+  width: 675px;
+  z-index: 1;
+}
+
+#tabbedView p {
+  padding: 10px;
+}
+
+#tabbedContentContainer {
+  bottom: 0px;
+  height: 65px;
+  overflow: hidden;
+  position: fixed;
+  right: 0px;
+  width: 500px;
+  z-index: 1e+06;
+}
+
+#tabbedContentArea {
+  bottom: -30px;
+  display: block;
+  height: 500px;
+  overflow: hidden;
+  padding: 15px 30px 0px 17px;
+  right: 0px;
+  width: 550px;
+  z-index: 1;
+  background:gray;
 }
