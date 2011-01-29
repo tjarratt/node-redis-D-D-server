@@ -46,12 +46,37 @@ h2 #{display}
 			  	#swatch(class="ui-widget-content ui-corner-all")
 		#roomContainer
 			h3 Players
-			- each playerObj, playerName in players
-				.playerBlock
-					img(class="playerImg", src= playerObj.src, id="player_" + playerObj.name)
-					div(id=playerObj.name)
-						.innerChat
-							a(href="#", class="chatLink", id= playerObj.name) #{playerObj.name}
+			.playerBlock
+				img(class="playerImg", src="/res/img/Tokens4.png", id="player_fiyin")
+				div(id="fiyin")
+					.innerChat
+						a(href="#", class="chatLink", id="fiyinChatLink") Fiyin
+			.playerBlock
+				img(class="playerImg", src="/res/img/Tokens5.png", id="player_oscar")
+				div(id="oscar")
+					.innerChat
+						a(href="#", class="chatLink", id="oscarChatLink") Oscar
+			.playerBlock
+				img(class="playerImg", src="/res/img/Tokens6.png", id="player_joe")
+				div(id="joe")
+					.innerChat
+						a(href="#", class="chatLink", id="joeChatLink") Joe
+			.playerBlock
+				img(class="playerImg", src="/res/img/creatures/monster9.png", id="player_Jen")
+				div(id="jen")
+					.innerChat
+						a(href="#", class="chatLink", id="jenChatLink") Fiyin
+			.playerBlock
+				img(class="playerImg", src="/res/img/Tokens.png", id="player_tim")
+				div(id="tim")
+					.innerChat
+						a(href="#", class="chatLink", id="timChatLink") Tim
+			//- each playerObj, playerName in players
+			//	.playerBlock
+			//		img(class="playerImg", src= playerObj.src, id="player_" + playerObj.name)
+			//		div(id=playerObj.name)
+			//			.innerChat
+			//				a(href="#", class="chatLink", id= playerObj.name) #{playerObj.name}
 		#whisperContainer(class="fr")
 			h3 Private Chat
 			p Connecting
