@@ -136,11 +136,11 @@ div.playerBlock {
 
 #tabbedContentContainer {
   bottom: 0px;
-  height: 65px;
+  height: 75px;
   overflow: hidden;
   position: fixed;
   right: 0px;
-  width: 500px;
+  width: 515px;
   z-index: 1e+06;
 }
 
@@ -154,8 +154,4 @@ div.playerBlock {
   width: 550px;
   z-index: 1;
   background:gray;
-}
-
-tabbedContentArea div {
-  display:none;
 }
