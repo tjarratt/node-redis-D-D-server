@@ -68,6 +68,7 @@ exports.Login = function(username, password, callback, res) {
   client.hexists("accounts", username, function(e, result) {
     sys.puts("result: " + result)
     util.inspect(result);
+    sys.puts(typeof result);
     
     if (result == false) {
       sys.puts("no account with name: " + username);

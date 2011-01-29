@@ -266,7 +266,7 @@ var StartSocket = function() {
         	    
         	    if (!msgDetails) {msgDetails = {};}
         	    
-        	    msg = {move: {who: msgDetails.from, x: msgDetails.x, y: msgDetails.y, src: msgDetails.img}};
+        	    msg = {move: {who: msgDetails.from, x: msgDetails.x, y: msgDetails.y, oldKey: msgDetails.oldKey, src: msgDetails.img}};
         	    //msg = {move : [name, message.substring(message.lastIndexOf("_"), message.length)]}
         	    //TODO: find a way to replace the last move message for this user
         	  }
@@ -280,7 +280,7 @@ var StartSocket = function() {
         	        image = message.substring(indexOfImg, message.length);
         	        
     	        msg = {add: {who: name, x: posX, y: posY, img: image}};
-    	        sys.puts("created this _add_ move for " + name);
+    	        sys.puts("created this _add_ object for " + name);
     	        sys.puts(sys.inspect(msg));    	        
         	  }
         	  else if (message.indexOf("_update") >= 0) {

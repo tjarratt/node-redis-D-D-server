@@ -127,6 +127,7 @@ div.playerBlock {
   right: 0px;
   width: 675px;
   z-index: 1;
+  background:brown;
 }
 
 #tabbedView p {
@@ -153,4 +154,8 @@ div.playerBlock {
   width: 550px;
   z-index: 1;
   background:gray;
+}
+
+tabbedContentArea div {
+  display:none;
 }
