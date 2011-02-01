@@ -52,6 +52,8 @@ app.get("/session", function(request, response) {
           localVars.mySessions = [{"name": "You do not own any sessions", "form" : ""}];
           localVars.sessions = [];
           localVars.display = "There are no sessions yet. Uh oh.";
+          localVars.is_iPad = false;
+          
           return response.render("session", {locals: localVars});
       }
       
@@ -68,6 +70,8 @@ app.get("/session", function(request, response) {
         localVars.activeSessions = activeSessions;
         localVars.mySessions = thisUsersSessions;
         localVars.sessions = displayResult;
+        localVars.is_iPad = false;
+        
         response.render("session", {locals: localVars});
       }
     
@@ -114,7 +118,7 @@ app.get("/session/delete", function(req, res) {
     self.model['display'] = text || "Deleted all existing sessions.";
     self.model['sessions'] = [];
     
-    self.render("session");
+    self.render("session", {locals: {is_iPad: false} });
   }
   
   client.hkeys("sessions", function(e, keys) {
@@ -135,7 +139,7 @@ app.get("/session/delete", function(req, res) {
 })
 
 app.get("/session/create", function(req, res) {
-  res.render("sessions/create");
+  res.render("sessions/create", {locals: {is_iPad: false} });
 });
 
 app.post("/session/create", function(request, response) {
@@ -166,6 +170,7 @@ app.post("/session/create", function(request, response) {
            sys.puts("wrote sessionID, but no data. Welp.");
            client.hdel("sessions", id, function(e, r) {
              localVars.display = exports.responses["sessionStorageError"];
+             localVars.is_iPad = false;
              
              return response.render("session", {locals: localVars});
            });
@@ -223,6 +228,7 @@ app.get("/session/edit/:id", function(request, response) {
       localVars.max = max;
       localVars.pass = pass? pass: "none";
       localVars.id = id;
+      localvars.is_iPad = false;
       
       sys.puts("okay render");
       response.render("sessions/edit", {locals: localVars});

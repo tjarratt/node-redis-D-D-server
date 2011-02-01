@@ -112,7 +112,7 @@ app.get("/", function(req, res) {
   var now = new Date();
   sys.puts("got a visitor at " + now);
   
-  res.render('home');
+  res.render('home', {locals: {is_iPad: false} });
 });
      
 app.listen(_config.port);

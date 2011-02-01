@@ -116,10 +116,10 @@ expressApp.get("/account", function(request, response) {
     if (!userInfo) {
       //unauthenticated version of this page
       sys.puts("unauthenticated view of /account");
-      return response.render('account', {locals: {message: msg}});
+      return response.render('account', {locals: {message: msg, is_iPad: false}});
     }
     
-    return response.render("account/accountDetails", {locals: {message: msg, name: userInfo.userName, image: userInfo.defaultImage }});
+    return response.render("account/accountDetails", {locals: {message: msg, name: userInfo.userName, image: userInfo.defaultImage, is_iPad: false }});
   }
   sys.puts("got pageview from sessionid: " + sessionId);
   users.getUserByCookieId(sessionId, gotAuthenticatedSession);

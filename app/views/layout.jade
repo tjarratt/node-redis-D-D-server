@@ -1,19 +1,26 @@
 !!! 5
 html(lang="en")
   head
-		//TODO: set the title here as a variable the view will set (SEO-ish)
-    title Tabletop Server
-		//script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js", type="text/javascript")
-		//script(src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js", type="text/javascript"
-		//script(src="http://cdn.socket.io/stable/socket.io.js", type="text/javascript")
-		script(src="/lib/head-min.js", type="text/javascript")
-		script(src="/lib/jquery.js", type="text/javascript")
-		script(src="/lib/jquery-ui.min.js", type="text/javascript")
-		script(src="/lib/socket.io.js", type="text/javascript")
-		link(rel="stylesheet", type="text/css", href="/res/css/fileuploader.css")
-		link(rel="stylesheet", type="text/css", href="/res/css/dnd.css?v=3")
-		link(rel="stylesheet", type="text/css", href="/res/css/room.css?v=3")
-  body(vlink="blue")
+	//TODO: set the title here as a variable the view will set (SEO-ish)
+	title Tabletop Server
+	//TODO: move all of this javascript into head.js
+	//script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js", type="text/javascript")
+	//script(src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js", type="text/javascript"
+	//script(src="http://cdn.socket.io/stable/socket.io.js", type="text/javascript")
+	script(src="/lib/head-min.js", type="text/javascript")
+	script(src="/lib/jquery.js", type="text/javascript")
+	script(src="/lib/jquery-ui.min.js", type="text/javascript")
+	script(src="/lib/socket.io.js", type="text/javascript")
+	link(rel="stylesheet", type="text/css", href="/res/css/fileuploader.css")
+	link(rel="stylesheet", type="text/css", href="/res/css/dnd.css?v=3")
+	link(rel="stylesheet", type="text/css", href="/res/css/room.css?v=3")
+	- if (is_iPad)
+		meta(name="apple-mobile-web-app-capaable", content="yes")
+		meta(name="apple-mobile-web-app-status-bar-style", content="black-translucent")
+		meta(name="viewport", content="user-scalable=no, width=device-width")
+		link(rel="apple-touch-icon", href="./favicon.ico")
+		
+  body(vlink="blue", ontouchmove="BlockMove(event);")
 		.leftBlock(id="headerLinks")
 			a(href="/") Home
 			a(href="/account") Account
