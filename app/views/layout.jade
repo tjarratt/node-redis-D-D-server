@@ -1,6 +1,5 @@
 !!! 5
-html(lang="en")
-  head
+head
 	//TODO: set the title here as a variable the view will set (SEO-ish)
 	title Tabletop Server
 	//TODO: move all of this javascript into head.js
@@ -17,9 +16,10 @@ html(lang="en")
 	- if (is_iPad)
 		meta(name="apple-mobile-web-app-capaable", content="yes")
 		meta(name="apple-mobile-web-app-status-bar-style", content="black-translucent")
-		meta(name="viewport", content="user-scalable=no, width=device-width")
+		meta(name="viewport", content="user-scalable=no", width="device-width")
 		link(rel="apple-touch-icon", href="./favicon.ico")
-		
+		link(rel="stylesheet", type="text/css", href="/res/css/mobile.css?v=0")
+html(lang="en")
   body(vlink="blue", ontouchmove="BlockMove(event);")
 		.leftBlock(id="headerLinks")
 			a(href="/") Home
