@@ -1,13 +1,40 @@
-p Hello iPad user, it's nice to have you here.
-canvas(id="background", width="1000", height="1000")
-//drawing the actual map image here
+#touchHandler
+	p(id="message") Hello iPad user, it's nice to have you here.
+	p(id="touchAction")
+	canvas(id="background", width="1250", height="1250")
+	//drawing the actual map image here
 
-canvas(id="shadow", width="1000", height="1000")
-canvas(id="shadowDrag", width="1000", height="1000")
-//new shadows while dragging are drawn here
+	canvas(id="shadow", width="1250", height="1250")
+	canvas(id="shadowDrag", width="1250", height="1250")
+	//new shadows while dragging are drawn here
 
-canvas(id="map", width="1000", height="1000") 
-//the PC images "live" here 
+	canvas(id="map", width="1250", height="1250") 
+	//the PC images "live" here 
 
-canvas(id="top", width="1000", height="1000") 
-canvas(id="annotations", width="1000", height="1000")
+	canvas(id="top", width="1250", height="1250")
+	canvas(id="annotations", width="1250", height="1250")
+	canvas(id="tools", width="300", height="90")
+	canvas(id="toolContent", width="450", height="150")
+.clear
+.scripts
+	:javascript
+		|	var currentTime = new Date(),
+		|			secs = currentTime.getTime();
+		| head.js("/lib/room/mobile.js?v=" + secs, 
+		|			"/lib/base64.js",
+		|			"/lib/canvas2Image.js",
+		|			"/lib/room/shared.js",
+		| function() {
+		| 	_listenId = "#{listenId}";
+		|		_websocketId = "#{websocketId}";
+		|		_default = "#{useDefault}";
+		|		_image = "#{imageName}";
+		|		_userName = "#{userName}";
+		|		_url = "#{url}";
+		|		_isDM = #{isDM}? true : false;
+		|		_isKnown = #{isKnown}? true : false;
+		|		if (!_isKnown) { return initMobileUnknown(); }
+		|		initMobileRoom();
+		|		initDrawer();
+		|		return;
+		|	});

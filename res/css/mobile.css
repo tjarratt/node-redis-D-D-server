@@ -1,0 +1,24 @@
+canvas {
+  height: 1250px;
+  width: 1250px;
+  position: absolute;
+}
+
+div#chatContainer {
+  padding-top:25px;
+}
+
+div#touchHandler {
+  width:1250px;
+  height:1250px;
+}
+
+canvas#tools {
+  height:90px!important;
+  width:300px!important;
+}
+
+canvas#toolContent {
+  height:150px!important;
+  width:550px!important;
+}

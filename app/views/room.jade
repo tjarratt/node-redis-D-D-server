@@ -1,5 +1,5 @@
 h2 #{display}
-#mapChatContainer
+#mapChatContainer(style="width: 1250px; left:0px")
 	div
 		#canvasContainer
 			canvas(id="background", width="1250", height="1250")
@@ -110,20 +110,21 @@ h2 #{display}
 	:javascript
 		|	var currentTime = new Date(),
 		|			secs = currentTime.getTime();
-		| head.js("/lib/room.js?v=" + secs, 
-		|					"/lib/base64.js",
-		|					"/lib/canvas2Image.js",
+		| head.js("/lib/room/room.js?v=" + secs, 
+		|			"/lib/base64.js",
+		|			"/lib/canvas2Image.js",
+		|			"/lib/room/shared.js",
 		| function() {
-		| 	_listenId = "#{listenId}";
-		|		_websocketId = "#{websocketId}";
-		|		_default = "#{useDefault}";
-		|		_image = "#{imageName}";
-		|		_userName = "#{userName}";
-		|		_url = "#{url}";
-		|		_isDM = #{isDM}? true : false;
-		|		_isKnown = #{isKnown}? true : false;
-		|		if (!_isKnown) { return initUnknown(); }
-		|		initRoom();
-		|		initDrawer();
-		|		return;
+		|	_listenId = "#{listenId}";
+		|	_websocketId = "#{websocketId}";
+		|	_default = "#{useDefault}";
+		|	_image = "#{imageName}";
+		|	_userName = "#{userName}";
+		|	_url = "#{url}";
+		|	_isDM = #{isDM}? true : false;
+		|	_isKnown = #{isKnown}? true : false;
+		|	if (!_isKnown) { return initUnknown(); }
+		|	initRoom();
+		|	initDrawer();
+		|	return;
 		|	});	
