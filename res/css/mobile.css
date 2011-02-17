@@ -18,7 +18,7 @@ canvas#tools {
   width:300px!important;
 }
 
-canvas#toolContent {
+canvas#toolContent, canvas#toolHighlight {
   height:150px!important;
   width:550px!important;
 }
