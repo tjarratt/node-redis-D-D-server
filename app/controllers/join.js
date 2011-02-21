@@ -26,10 +26,29 @@ function getUsersForRoom(uuid, callback) {
   
 }
 
+function renderRoomWithPlayers(response, localVars, players, id, sessionId, thisUser, imageName) {
+  localVars.players = players;
+  localVars.display = responses['joinSuccess'];
+  localVars.listenId = id;
+  localVars.useDefault  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
+  localVars.websocketId = sessionId; //TODO: use this to dedupe websockets when someone joins a room in multiple tabs
+  localVars.imageName = imageName;
+  localVars.userName = thisUser;
+  localVars.url = _url;
+  localVars.isDM = false;
+  localVars.isKnown = true;
+  localVars.is_iPad = iPadUserAgent;
+  
+  var whichRoom = iPadUserAgent ? "room_mobile" : "room";
+
+  response.render(whichRoom, {locals: localVars});
+}
+
 app.get("/join/:id", function(request, response) {
   var id = request.params.id,
-      localVars = {},
-      iPadUserAgent = request.header("user-agent").indexOf("iPad") > 0;
+      localVars = {};
+      
+  iPadUserAgent = request.header("user-agent").indexOf("iPad") > 0;
   
   function identifiedUserByCookie(result) {
     if (!result ||  !result.userName) {
@@ -123,7 +142,7 @@ app.get("/join/:id", function(request, response) {
             sys.puts("emitting good, valid response.");
             return response.render(whichRoom, {locals: localVars});
           }
-          return renderRoomWithPlayers([]);
+          return renderRoomWithPlayers(response, localVars, [], id, sessionId, thisUser, imageName);
           //user is not DM, we need to set this up so they can see other users
           //might be possible to push this off to an API call later
           _.each(users, function(socketid, index) {
@@ -141,7 +160,7 @@ app.get("/join/:id", function(request, response) {
                     sys.puts("got no result for hmget users:" + userId + " will attempt on next process tick.");
                     totalUsers--;
                     
-                    return totalUsers <= 0? renderRoomWithPlayers(players) : false;
+                    return totalUsers <= 0? renderRoomWithPlayers(response, localVars, players, id, sessionId, thisUser, imageName) : false;
                   }
                   
                   totalUsers--;
@@ -165,29 +184,11 @@ app.get("/join/:id", function(request, response) {
                   }
 
                   if (totalUsers <= 0) {
-                    return renderRoomWithPlayers(players);
+                    return renderRoomWithPlayers(response, localVars, players, id, sessionId, thisUser, imageName);
 
                   };
                 });
               }
-              var renderRoomWithPlayers = function(players) {
-                localVars.players = players;
-                localVars.display = responses['joinSuccess'];
-                localVars.listenId = id;
-                localVars.useDefault  = true; //use a default image for now, so this looks less broken when there is no map uploaded for a session
-                localVars.websocketId = sessionId; //TODO: use this to dedupe websockets when someone joins a room in multiple tabs
-                localVars.imageName = imageName;
-                localVars.userName = thisUser;
-                localVars.url = _url;
-                localVars.isDM = false;
-                localVars.isKnown = true;
-                localVars.is_iPad = false;
-                
-                var whichRoom = iPadUserAgent ? "room_mobile" : "room";
-
-                response.render(whichRoom, {locals: localVars});
-              }
-
               fetchThisUser(userId);
             });
           });

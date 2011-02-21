@@ -13,12 +13,71 @@ div#touchHandler {
   height:1250px;
 }
 
-canvas#tools {
-  height:90px!important;
-  width:300px!important;
+div.tools {
+  background:url(/res/img/palette/button-tray.png) no-repeat;
+  height: 100px;
 }
 
-canvas#toolContent, canvas#toolHighlight {
-  height:150px!important;
-  width:550px!important;
+div#menu {
+  position: absolute;
+  width: 308px;
+  height: 90px;
+  background-color:gray;
+  right: -285px;
+}
+
+div#menuContent {
+  position: absolute;
+  width: 500px;
+  height: 200px;
+  background-color:brown;
+  right: 20px;
+}
+
+div.menuItem {
+  padding: 5px;
+  border: 1px solid black;
+  height: 80px;
+  width: 90px;
+  float: right;
+  text-align: center;
+}
+
+div.tools img {
+  position: relative;
+  left: -5px;
+  top: -5px;
+}
+
+div.creatures img {
+  position: relative;
+  left: 15px;
+  border: 1px solid black;
+  padding-bottom:-15px;
+}
+
+div.tools {
+  position: relative;
+  left: 15px;
+  top: 15px;
+  padding: 10px;
+  padding-bottom: -10px;
+}
+
+div#menuContentPlayers {
+  padding: 20px;
+}
+
+div#menuContentStatus {
+  padding: 20px;
+}
+
+div.playerBlock {
+  border: 1px solid black;
+  text-align:center;
+}
+
+div.playerBlock img {
+  padding: 2.5px;
+  padding-top: 10px;
 }

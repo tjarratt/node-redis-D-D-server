@@ -1,7 +1,7 @@
 exports.config = 
 {
 	production: {url: "illegaltoaster.com", port: 8000},
-	debug: {url: "localhost", port: 8000}
+	debug: {url: "butter3.local", port: 8000}
 }
 
 exports.debug = function() {

@@ -80,7 +80,7 @@ exports.Login = function(username, password, callback, res) {
         //basic auth is basic
         if (realPassword != password) {
           sys.puts("bad password");
-          if (_config.url = "localhost") {
+          if (_config.url == "butter3.local") {
             sys.puts(realPassword + "!=" + password);
           }
           

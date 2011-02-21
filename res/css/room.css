@@ -46,34 +46,34 @@ form#privateForm {
 }
 input#tool_annotate {
 	background:url(/res/img/palette/annotate.png) no-repeat;
-	width: 30px;
-	height: 30px;
+	width: 68px;
+	height: 68px;
 }
 input#tool_shadow {
 	background:url(/res/img/palette/shadow.png) no-repeat;
-	width: 30px;
-	height: 30px;
+	width: 68px;
+	height: 68px;
 }
 input#tool_wipe {
 	background:url(/res/img/palette/wipe.png) no-repeat;
-	width: 30px;
-	height: 30px;
+	width: 68px;
+	height: 68px;
 }
 input#tool_erase {
 	background:url(/res/img/palette/erase.png) no-repeat;
-	width: 30px;
-	height: 30px;
+	width: 68px;
+	height: 68px;
 }
 input#tool_move {
 	background:url(/res/img/palette/pointer.png) no-repeat;
-	width: 30px;
-	height: 30px;
+	width: 68px;
+	height: 68px;
 }
 input#tool_delete {
   background:url(/res/img/palette/delete.png) no-repeat;
   background-color:white;
-	width: 30px;
-	height: 30px;
+	width: 68px;
+	height: 68px;
 }
 #swatch {
 	width: 50px;

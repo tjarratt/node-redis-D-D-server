@@ -19,16 +19,10 @@ head
 		meta(name="viewport", content="user-scalable=no", width="device-width")
 		//link(rel="apple-touch-icon", href="./favicon.ico")
 		link(rel="stylesheet", type="text/css", href="/res/css/mobile.css?v=0")
-html(lang="en")
-  body(vlink="blue", ontouchmove="BlockMove(event);")
-		.leftBlock(id="headerLinks")
-			a(href="/") Home
-			a(href="/account") Account
-			a(href="/session") Start / Join a Session
-			//a(href="/pc") Characters
-			//a(href="/talk") Talk
-		//.rightBlock(id="trHeader")
-		//	span designed by 
-		//	a(href="http://www.illegaltoaster.com") Tim Jarratt
-		.clear
-		div#container!= body
+body(vlink="blue", ontouchmove="BlockMove(event);")
+	.leftBlock(id="headerLinks")
+		a(href="/") Home
+		a(href="/account") Account
+		a(href="/session") Start / Join a Session
+	.clear
+	div#container!= body

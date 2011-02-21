@@ -1,6 +1,4 @@
 #touchHandler
-	p(id="message") Hello iPad user, it's nice to have you here.
-	p(id="touchAction")
 	canvas(id="background", width="1250", height="1250")
 	//drawing the actual map image here
 
@@ -13,10 +11,64 @@
 
 	canvas(id="top", width="1250", height="1250")
 	canvas(id="annotations", width="1250", height="1250")
-	canvas(id="tools", width="300", height="90")
-	canvas(id="toolContent", width="450", height="150")
-	canvas(id="toolHighlight", width="450", height="150")
+	//canvas(id="tools", width="300", height="90")
+	//canvas(id="toolContent", width="450", height="150")
+	//canvas(id="toolHighlight", width="450", height="150")
+div(id="menu")
+	.menuItem(id="menuRoom")
+		p room info
+	.menuItem(id="menuPlayers")
+		p players
+	.menuItem(id="menuTools")
+		p tools
+div(id="menuContent")
+	.status(id="menuContentStatus", style="display:none")
+		p(id="message") Everything seems to be fine.
+		p(id="touchAction")
+	.players(id="menuContentPlayers", style="display:none")
+		.playerBlock
+			img(src="/res/img/Tokens4.png");
+			p Fiyin
+		.playerBlock
+			img(src="/res/img/Tokens5.png");
+			p Oscar
+		.playerBlock
+			img(src="/res/img/Tokens6.png");
+			p Joe
+		.playerBlock
+			img(src="/res/img/creatures/monster9.png");
+			p Jen
+		.playerBlock
+			img(src="/res/img/Tokens.png");
+			p Tim__
+	.tool(id="menuContentTools")
+		.tools
+			img(src="/res/img/palette/annotate.png", id="tool_annotate")
+			img(src="/res/img/palette/shadow.png", id="tool_shadow")
+			img(src="/res/img/palette/erase.png", id="tool_erase")
+			img(src="/res/img/palette/wipe.png", id="tool_wipe")
+			img(src="/res/img/palette/pointer.png", id="tool_move")
+			img(src="/res/img/palette/delete.png", id="tool_delete")
+		.clear
+		.creatures
+			img(class="playerImg", src="/res/img/creatures/monster1.png")
+			img(class="playerImg", src="/res/img/creatures/monster2.png")
+			img(class="playerImg", src="/res/img/creatures/monster3.png")
+			img(class="playerImg", src="/res/img/creatures/monster4.png")
+			img(class="playerImg", src="/res/img/creatures/monster5.png")
+			img(class="playerImg", src="/res/img/creatures/monster6.png")
+			img(class="playerImg", src="/res/img/creatures/monster7.png")
+			img(class="playerImg", src="/res/img/creatures/monster8.png")
+			img(class="playerImg", src="/res/img/creatures/monster9.png")
 .clear
+p(id="debug")
+#chatContainer
+	h3 Chat / History
+	#chat
+		p Connecting...
+	form(id="form")
+	  input(type="text", autocomplete="off", id="text")
+		input(type="submit", value="Send")
 .scripts
 	:javascript
 		|	var currentTime = new Date(),
@@ -36,6 +88,5 @@
 		|		_isKnown = #{isKnown}? true : false;
 		|		if (!_isKnown) { return initMobileUnknown(); }
 		|		initMobileRoom();
-		|		initDrawer();
 		|		return;
 		|	});
