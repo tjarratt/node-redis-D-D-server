@@ -15,6 +15,7 @@ h2 #{display}
 			canvas(id="top", width="1250", height="1250") 
 			//dragging player images
 			canvas(id="annotations", width="1250", height="1250")
+			canvas(id="test", width="1250", height="1250")
 			textarea(id="textArea", rows="25", cols="25") //using this as a drop target
 	.clear(style="height:50px")
 #tabbedContentContainer
@@ -126,5 +127,6 @@ h2 #{display}
 		|	if (!_isKnown) { return initUnknown(); }
 		|	initRoom();
 		|	initDrawer();
+		|	//initTest();
 		|	return;
 		|	});	
