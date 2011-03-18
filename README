@@ -13,8 +13,9 @@ So you'd like to run this? You'll need
 node.js (http://github.com/ry/node)
 npm (curl http://npmjs.org/install.sh | sudo sh)
 and some npm modules
-	npm install grasshopper
+	npm install express
 	npm install redis
+        npm install underscore
 	
 and if you want the Talk functionality, you'll want to be running os x (for now. In the future the server itself will not talk).
 
